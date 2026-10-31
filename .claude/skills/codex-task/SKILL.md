@@ -47,4 +47,5 @@ Không tin câu "đã xong" của agent. Lỗi → gửi lại agent với lỗi
 - Commit trên nhánh task (`<Txx>: ...`, kèm dòng Co-Authored-By theo hướng dẫn hệ thống).
 - `git merge --no-ff feat/<Txx>-...` vào `main`, chạy lại toàn bộ kiểm tra trên `main`.
 - Dọn: `docker compose -p dut_<txx> down -v`, `git worktree remove D:\Documents\DUT_LEARN\wt\<Txx>`.
-- Cập nhật Trello (thẻ CORE tương ứng) và tiến độ trong kế hoạch.
+- Cập nhật Trello (thẻ việc tương ứng, bình luận bằng chứng) và tiến độ trong kế hoạch.
+- Ghi một mục vào sổ tay chuẩn bị bảo vệ (tài liệu nội bộ, xem CLAUDE.local.md): quyết định, lý do, phương án khác, bằng chứng, câu hỏi phản biện có thể gặp.
