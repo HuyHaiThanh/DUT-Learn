@@ -1,6 +1,6 @@
 # DUTLearn
 
-Đề tài: **Xây dựng nền tảng học tập tích hợp trợ giảng AI**.
+Đề tài: **Xây dựng nền tảng học tập tích hợp trợ giảng AI cho sinh viên công nghệ thông tin**.
 
 DUTLearn là dự án đồ án tốt nghiệp xây dựng nền tảng web kết nối học liệu, trợ giảng AI, bài tập, luyện tập và phản hồi của giảng viên. Sinh viên có thể đọc tài liệu và đặt câu hỏi ngay trong ngữ cảnh bài học; giảng viên kiểm soát học liệu, câu luyện tập và kết quả đánh giá được công bố.
 
