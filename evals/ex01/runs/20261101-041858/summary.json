@@ -1,0 +1,54 @@
+{
+  "generation": {
+    "n": 12,
+    "cold_first_total_s": 92.079,
+    "cold_load_s": 51.492,
+    "warm_p50_total_s": 1.666,
+    "warm_p95_total_s": 4.918,
+    "warm_mean_tok_per_s": 37.5,
+    "gpu_mem_peak_mib": 6167,
+    "concurrent_2": {
+      "wall_s": 4.778,
+      "each_total_s": [
+        4.777,
+        2.596
+      ],
+      "each_tok_per_s": [
+        36.1,
+        36.5
+      ]
+    }
+  },
+  "embedding": {
+    "model": "intfloat/multilingual-e5-small",
+    "device": "cpu",
+    "dim": 384,
+    "max_seq_length": 512,
+    "load_s": 57.66,
+    "passages": 400,
+    "passages_per_s": 58.9,
+    "sanity_top_passage_index": 0,
+    "sanity_scores": [
+      0.92,
+      0.88,
+      0.817,
+      0.809,
+      0.801,
+      0.8,
+      0.824,
+      0.801,
+      0.81,
+      0.775,
+      0.763,
+      0.789,
+      0.818,
+      0.831,
+      0.787,
+      0.787,
+      0.791,
+      0.8,
+      0.801,
+      0.819
+    ]
+  }
+}

@@ -1,0 +1,30 @@
+{
+  "mcpServers": {
+    "playwright": {
+      "command": "cmd",
+      "args": [
+        "/c", "npx", "-y", "@playwright/mcp@0.0.84",
+        "--browser", "msedge",
+        "--isolated",
+        "--caps", "devtools,pdf",
+        "--output-dir", ".playwright-mcp"
+      ]
+    },
+    "context7": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@upstash/context7-mcp@4.4.4"]
+    },
+    "shadcn": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "shadcn@4.23.0", "mcp"]
+    },
+    "trello": {
+      "command": "cmd",
+      "args": ["/c", "npx", "-y", "@delorenj/mcp-server-trello@1.8.1"],
+      "env": {
+        "TRELLO_API_KEY": "${TRELLO_API_KEY:-}",
+        "TRELLO_TOKEN": "${TRELLO_TOKEN:-}"
+      }
+    }
+  }
+}

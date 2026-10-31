@@ -11,7 +11,7 @@ Trạng thái: v0.1 (01/11/2026, đã cập nhật theo review kế hoạch v2),
 | Embedding | `intfloat/multilingual-e5-small` (dim 384) qua sentence-transformers | Bắt buộc tiền tố `query: ` / `passage: `; tối đa 512 token; chuẩn hóa L2; cosine. |
 | LLM | Ollama native `http://127.0.0.1:11434`, model `qwen2.5:7b-instruct` (Q4_K_M) | Tên model cấu hình qua env `DUT_LLM_MODEL`. |
 | PDF | PyMuPDF | Chỉ PDF có lớp văn bản. |
-| Frontend | React 18 + TypeScript + Vite, React Router, TanStack Query, pdf.js (`pdfjs-dist`) | Quản lý gói `npm`; khóa `package-lock.json`. |
+| Frontend | React 18 + TypeScript + Vite, React Router, TanStack Query, pdf.js (`pdfjs-dist`), Tailwind CSS 4 + shadcn/ui (Radix) | Quản lý gói `npm`; khóa `package-lock.json`. shadcn/ui sao mã component vào `src/components/ui` (không khóa thư viện), Radix hỗ trợ bàn phím/ARIA cho NFR tiếp cận. Thêm ở T06. |
 | Test | pytest (+ testcontainers hoặc DB compose riêng `dutlearn_test`), Vitest, Playwright | |
 | Lint | ruff + mypy (backend), eslint + tsc (frontend) | |
 

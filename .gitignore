@@ -7,7 +7,7 @@
 .env.*
 !.env.example
 data/
-evals/runs/
+evals/**/runs/
 
 # Cau hinh ca nhan cua Claude Code
 CLAUDE.local.md
