@@ -1,1 +1,14 @@
-/docs
+/docs/*
+!/docs/engineering/
+/.codex-build/
+data/
+.env
+**/__pycache__/
+node_modules/
+.venv/
+evals/runs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+dist/
+*.tsbuildinfo
