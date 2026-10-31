@@ -1,6 +1,6 @@
 # DUTLearn — Hợp đồng kỹ thuật v0
 
-Trạng thái: v0.1 (01/11/2026, đã cập nhật theo review kế hoạch v2), chủ sở hữu: Tech Lead. Mọi agent đọc file này trước khi sửa code. Thay đổi hợp đồng phải đề xuất trong báo cáo task, không tự sửa.
+Trạng thái: v0.2 (01/11/2026, thêm quy tắc khối mã và ngưỡng thiếu căn cứ theo review kế hoạch lần 2), chủ sở hữu: Tech Lead. Mọi agent đọc file này trước khi sửa code. Thay đổi hợp đồng phải đề xuất trong báo cáo task, không tự sửa.
 
 ## 1 Ngăn xếp và phiên bản
 
@@ -46,7 +46,7 @@ Mọi bảng có `id` (UUID v4, server sinh), `created_at`, `updated_at` (timest
 | lessons | class_id, title, position, is_published | |
 | materials | class_id, lesson_id NULL, title, kind `pdf|text`, visibility `students|lecturers`, source_note, license_note, active_version_id NULL | active_version_id trỏ đến bản `published` duy nhất |
 | material_versions | material_id, version_no, status `uploaded|processing|ready|failed|published|superseded|revoked`, storage_key, checksum_sha256, page_count, quality_report JSONB, error, published_at/by, revoked_at/by | unique(material_id, version_no) |
-| chunks | version_id, ordinal, page_index (0-based), page_label, char_start, char_end, text, token_count, embedding vector(384) | index (version_id); chỉ tạo khi version thuộc material |
+| chunks | version_id, ordinal, kind `text|code`, page_index (0-based), page_index_end, page_label, char_start, char_end, code_block_id NULL, part_no NULL, text, token_count, embedding vector(384) | index (version_id); chỉ tạo khi version thuộc material |
 | chat_sessions | user_id, class_id, lesson_id NULL, material_id NULL | |
 | chat_messages | session_id, role `user|assistant`, mode `answer|hint`, content, status `ok|insufficient_evidence|error`, error_code, retriever, model, prompt_version, latency_ms, request_id | |
 | citations | message_id, chunk_id, version_id, page_index, excerpt, ordinal | |
@@ -141,7 +141,7 @@ Lỗi: 503 `llm_unavailable`, 504 `llm_timeout`, 429 `llm_busy` (hàng đợi đ
 
 `LLMClient`: semaphore 1 request đang sinh, hàng đợi tối đa 3. Dev gọi `http://127.0.0.1:11434`; trong Compose gọi `http://host.docker.internal:11434` (kiểm chứng ở T04).
 
-Quy trình máy chủ: kiểm quyền → truy xuất top-k trong phạm vi (ưu tiên tài liệu/trang đang mở nếu có, không loại các nguồn khác) → nếu điểm tốt nhất < ngưỡng `DUT_MIN_SCORE` thì trả `insufficient_evidence` không gọi LLM → dựng prompt (`prompt_version` cố định trong code, các đoạn đánh số [1..k]) → gọi LLM → phân tích các `[n]` trong câu trả lời, **loại mọi số không thuộc 1..k**, chỉ lưu citation hợp lệ → nếu không còn citation hợp lệ và LLM không tự báo thiếu căn cứ thì gắn `limitation` → **kiểm lại** (truy vấn SQL I2) mọi version được trích còn là active/published/visible; nếu không → bỏ câu trả lời, trả 409 `source_changed` → lưu message + citations + latency.
+Quy trình máy chủ: kiểm quyền → truy xuất top-k trong phạm vi (ưu tiên tài liệu/trang đang mở nếu có, không loại các nguồn khác) → nếu **điểm cosine cao nhất** trong các đoạn cuối cùng (với cả dense và hybrid — không dùng điểm RRF) < ngưỡng của cấu hình đang chạy (`DUT_MIN_SCORE_DENSE` / `DUT_MIN_SCORE_HYBRID`, hiệu chỉnh trên dev cùng một quy tắc, khóa trước test) thì trả `insufficient_evidence` không gọi LLM → dựng prompt (`prompt_version` cố định trong code, các đoạn đánh số [1..k]) → gọi LLM → phân tích các `[n]` trong câu trả lời, **loại mọi số không thuộc 1..k**, chỉ lưu citation hợp lệ → nếu không còn citation hợp lệ và LLM không tự báo thiếu căn cứ thì gắn `limitation` → **kiểm lại** (truy vấn SQL I2) mọi version được trích còn là active/published/visible; nếu không → bỏ câu trả lời, trả 409 `source_changed` → lưu message + citations + latency.
 
 Đọc lịch sử: với người xem là sinh viên, message assistant có citation trỏ tới version không còn hiệu lực trả `content=null`, `status=source_withdrawn` và thông báo thay thế; bản gốc giữ trong DB.
 
@@ -151,7 +151,7 @@ Prompt chống chỉ dẫn đánh lừa: nội dung học liệu và câu hỏi 
 
 ## 6 Ingest
 
-`uploaded → processing → ready|failed`. Một worker thread; nhận job bằng `UPDATE … SET status='processing' WHERE id=? AND status IN ('uploaded','failed') RETURNING`. Bước: kiểm tra magic `%PDF` (PDF) hoặc giải mã UTF-8 hợp lệ (TXT/MD; mỗi "trang" = khối ~3000 ký tự, cắt ở ranh giới đoạn), lưu `data/materials/<material_id>/<version_id>.pdf` (tên do server sinh) → checksum → PyMuPDF trích theo trang → cảnh báo trang rỗng/ít chữ (quality_report: page_count, empty_pages, chars_per_page, sample) → chia đoạn theo tokenizer e5: mục tiêu 350 token, chồng 50, không vượt trang (ghi page_index; chunk dài trang được cắt) → embedding batch `passage: ` → trong **một transaction**: xóa chunk cũ của version, ghi toàn bộ chunk mới, chuyển `ready`. Lỗi bất kỳ → `failed` + `error` (không có chunk dở vì chưa ghi). Publish chỉ bằng `UPDATE … WHERE status='ready'`. Khởi động app: version `processing` quá 30 phút → `failed`.
+`uploaded → processing → ready|failed`. Một worker thread; nhận job bằng `UPDATE … SET status='processing' WHERE id=? AND status IN ('uploaded','failed') RETURNING`. Bước: kiểm tra magic `%PDF` (PDF) hoặc giải mã UTF-8 hợp lệ (TXT/MD; mỗi "trang" = khối ~3000 ký tự, cắt ở ranh giới đoạn), lưu `data/materials/<material_id>/<version_id>.pdf` (tên do server sinh) → checksum → PyMuPDF trích theo trang → cảnh báo trang rỗng/ít chữ (quality_report: page_count, empty_pages, chars_per_page, sample) → chia đoạn theo tokenizer e5: văn bản mục tiêu 350 token, chồng 50, không vượt trang. **Khối mã** (nhận diện bằng font đơn cách/thụt lề của PyMuPDF hoặc rào ``` trong TXT/MD): giữ nguyên khoảng trắng; nếu ≤ 480 token thì là một chunk `kind=code` (được phép kéo qua trang: `page_index` = trang bắt đầu, `page_index_end` = trang kết thúc); nếu dài hơn thì chia tại ranh giới dòng (ưu tiên dòng trống/dấu `}`), mỗi phần ≤ 480 token, cùng `code_block_id`, `part_no` tăng dần, lặp lại dòng khai báo hàm ở đầu mỗi phần nếu có. PDF nhiều cột: dùng thứ tự khối của PyMuPDF theo cột; ghi cảnh báo vào quality_report nếu thứ tự đọc bất thường → embedding batch `passage: ` → trong **một transaction**: xóa chunk cũ của version, ghi toàn bộ chunk mới, chuyển `ready`. Lỗi bất kỳ → `failed` + `error` (không có chunk dở vì chưa ghi). Publish chỉ bằng `UPDATE … WHERE status='ready'`. Khởi động app: version `processing` quá 30 phút → `failed`.
 
 ## 7 Quy ước làm việc cho agent
 
