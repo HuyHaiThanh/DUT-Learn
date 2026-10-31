@@ -4,7 +4,7 @@
 
 DUTLearn là dự án đồ án tốt nghiệp xây dựng nền tảng web kết nối học liệu, trợ giảng AI, bài tập, luyện tập và phản hồi của giảng viên. Sinh viên có thể đọc tài liệu và đặt câu hỏi ngay trong ngữ cảnh bài học; giảng viên kiểm soát học liệu, câu luyện tập và kết quả đánh giá được công bố.
 
-**Trạng thái ngày 17/10/2026:** đã chuẩn bị bản dự thảo đề cương, kế hoạch chi tiết và bảng Trello. Ứng dụng chưa được triển khai; chức năng, kiến trúc và phép đánh giá bên dưới là kế hoạch thực hiện. Tên đề tài, phạm vi và môn thí điểm đang chờ thống nhất với giảng viên hướng dẫn.
+**Trạng thái ngày 19/10/2026:** đã chuẩn bị bản dự thảo đề cương, kế hoạch chi tiết, bảng Trello và một prototype giao diện tĩnh tại [`demo/index.html`](demo/index.html). Prototype dùng dữ liệu minh họa để trình bày luồng đọc học liệu và hỏi trợ giảng; chưa kết nối backend, tài khoản, cơ sở dữ liệu hoặc mô hình AI. Chức năng, kiến trúc và phép đánh giá bên dưới vẫn là kế hoạch thực hiện. Tên đề tài, phạm vi và môn thí điểm đang chờ thống nhất với giảng viên hướng dẫn.
 
 ## Liên kết dự án
 
@@ -12,6 +12,10 @@ DUTLearn là dự án đồ án tốt nghiệp xây dựng nền tảng web kế
 | --- | --- |
 | Kho mã nguồn | [HuyHaiThanh/DUT-Learn](https://github.com/HuyHaiThanh/DUT-Learn) |
 | Công việc và tiến độ | [Trello DUTLearn](https://trello.com/b/Eqscsjcw/dutlearn) |
+
+## Prototype giao diện
+
+Mở file [`demo/index.html`](demo/index.html) trực tiếp bằng trình duyệt để xem prototype. Có thể thử gửi câu hỏi mẫu, chọn gợi ý nhanh và mở trích dẫn để thấy đoạn học liệu được đánh dấu. Câu trả lời hiện được mô phỏng bằng JavaScript cục bộ, không gửi dữ liệu ra ngoài và không đại diện cho chất lượng của mô hình AI.
 
 Tên sản phẩm thống nhất là **DUTLearn**; tên repository và đường dẫn GitHub hiện giữ nguyên `DUT-Learn`.
 
@@ -124,7 +128,7 @@ Workflow nhiều bước và công cụ AI, thông tin nhớ có kiểm soát, �
 
 ## Tài liệu và trạng thái repository
 
-Hiện repository phục vụ chuẩn bị đề cương và kế hoạch; chưa có scaffold ứng dụng, bản demo hoặc lệnh cài/chạy được kiểm chứng.
+Hiện repository phục vụ chuẩn bị đề cương, kế hoạch và prototype giao diện; chưa có scaffold ứng dụng hay lệnh cài/chạy backend được kiểm chứng.
 
 Các tài liệu làm việc đang lưu cục bộ trong `docs/`:
 
@@ -135,6 +139,7 @@ Các tài liệu làm việc đang lưu cục bộ trong `docs/`:
 | Kế hoạch triển khai chi tiết | `docs/KE_HOACH_CHI_TIET_DUTLEAN.md` và PDF tương ứng trong `docs/deliverables/` |
 | Backlog có cấu trúc | `docs/DUTLEAN_BACKLOG.json` |
 | Nội dung Trello và bản đối chiếu lần cập nhật | `docs/TRELLO_PUBLISHED_CARDS.json`, `docs/TRELLO_REMOTE_VERIFICATION.json`, `docs/TRELLO_UPDATE_STATUS.md` |
+| Prototype màn hình học và trợ giảng | `demo/index.html` (tĩnh, dữ liệu minh họa, chưa nối AI/backend) |
 
 `docs/` hiện được bỏ qua bởi `.gitignore`, nên bảng trên mô tả file của bản làm việc local, chưa phải tài liệu đã xuất bản trên GitHub. Đề cương và kế hoạch PDF được gửi riêng cho GVHD; liên kết thư mục báo cáo sẽ bổ sung khi có địa chỉ và quyền truy cập được xác nhận.
 

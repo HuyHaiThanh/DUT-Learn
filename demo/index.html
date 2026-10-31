@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#f6f7f2">
+  <title>DUTLearn · Không gian học tập</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172c3d;
+      --muted: #657687;
+      --line: #e2e8e5;
+      --paper: #f6f7f2;
+      --white: #fff;
+      --green: #167b69;
+      --green-dark: #0e5e50;
+      --green-soft: #e9f4ef;
+      --lime: #d7ed91;
+      --amber: #b96d28;
+      --amber-soft: #fbf3e8;
+      --blue-soft: #edf3f9;
+      --shadow: 0 12px 34px rgba(21, 45, 59, .07);
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-width: 320px; background: var(--paper); color: var(--ink); font-size: 15px; line-height: 1.5; }
+    button, textarea, input { font: inherit; }
+    button { color: inherit; }
+    button:focus-visible, a:focus-visible, textarea:focus-visible, input:focus-visible { outline: 3px solid #72b9a9; outline-offset: 2px; }
+    .app { min-height: 100vh; display: grid; grid-template-columns: 232px minmax(0, 1fr); }
+    .sidebar { position: sticky; top: 0; height: 100vh; padding: 23px 15px 18px; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; z-index: 5; }
+    .brand { display: flex; align-items: center; gap: 11px; padding: 0 10px 26px; text-decoration: none; color: inherit; }
+    .brand-mark { width: 36px; height: 36px; display: grid; place-items: center; border-radius: 12px; background: var(--green); color: #fff; font-weight: 800; font-size: 18px; letter-spacing: -.05em; }
+    .brand-name { font-size: 17px; font-weight: 750; letter-spacing: -.04em; }
+    .brand-sub { color: var(--muted); font-size: 11px; display: block; font-weight: 500; letter-spacing: 0; }
+    .side-label { padding: 12px 11px 8px; color: #8b98a3; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; font-weight: 750; }
+    .nav { display: grid; gap: 4px; }
+    .nav-item { min-height: 44px; border: 0; background: transparent; display: flex; align-items: center; gap: 12px; padding: 0 12px; border-radius: 10px; text-align: left; color: #5a6c7b; cursor: pointer; transition: background .16s, color .16s; }
+    .nav-item:hover { background: #f3f6f3; color: var(--ink); }
+    .nav-item.active { color: var(--green-dark); background: var(--green-soft); font-weight: 680; }
+    .nav-item svg, .icon-btn svg { width: 18px; height: 18px; stroke: currentColor; fill: none; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; flex: none; }
+    .course-shortcut { margin: 7px 2px 0; padding: 13px 11px; border-radius: 12px; border: 1px solid var(--line); display: flex; align-items: center; gap: 10px; background: #fff; cursor: pointer; text-align: left; }
+    .course-icon { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 9px; background: #f0eddf; color: #827143; font-size: 12px; font-weight: 750; }
+    .course-name { font-size: 12px; font-weight: 700; line-height: 1.3; }
+    .course-sub { color: var(--muted); font-size: 10px; margin-top: 3px; }
+    .side-bottom { margin-top: auto; }
+    .profile { padding: 14px 8px 2px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 34px; height: 34px; border-radius: 50%; background: #dfece7; color: #276b5b; display: grid; place-items: center; font-size: 11px; font-weight: 750; flex: none; }
+    .profile-name { font-size: 12px; font-weight: 700; }
+    .profile-role { color: var(--muted); font-size: 10px; }
+    .main { min-width: 0; }
+    .topbar { height: 64px; display: flex; align-items: center; justify-content: space-between; padding: 0 30px; background: rgba(255,255,255,.84); border-bottom: 1px solid var(--line); }
+    .crumbs { display: flex; gap: 9px; align-items: center; color: var(--muted); font-size: 12px; }
+    .crumbs strong { color: var(--ink); font-weight: 650; }
+    .top-actions { display: flex; align-items: center; gap: 10px; }
+    .demo-label { padding: 5px 9px; color: #825420; border: 1px solid #edd9ba; background: var(--amber-soft); border-radius: 999px; font-size: 10px; font-weight: 700; }
+    .icon-btn { width: 44px; height: 44px; border: 1px solid var(--line); background: #fff; display: grid; place-items: center; border-radius: 10px; cursor: pointer; }
+    .content { padding: 26px 30px 38px; max-width: 1580px; margin: auto; }
+    .page-heading { display: flex; justify-content: space-between; align-items: flex-end; gap: 18px; margin-bottom: 20px; }
+    .eyebrow { color: var(--green); text-transform: uppercase; font-size: 10px; letter-spacing: .12em; font-weight: 760; }
+    h1 { font-size: clamp(24px, 2vw, 31px); line-height: 1.2; letter-spacing: -.04em; margin: 5px 0 5px; }
+    .page-desc { color: var(--muted); font-size: 13px; margin: 0; }
+    .lesson-meta { color: var(--muted); display: flex; gap: 14px; font-size: 11px; white-space: nowrap; }
+    .workspace { display: grid; grid-template-columns: minmax(440px, 1fr) minmax(330px, 390px); gap: 18px; align-items: stretch; }
+    .reader, .tutor { background: var(--white); border: 1px solid var(--line); border-radius: 15px; box-shadow: var(--shadow); min-width: 0; }
+    .reader { overflow: hidden; }
+    .reader-toolbar { display: flex; justify-content: space-between; align-items: center; min-height: 52px; padding: 0 17px; border-bottom: 1px solid var(--line); }
+    .reader-title { display: flex; align-items: center; gap: 9px; font-size: 12px; font-weight: 700; }
+    .pdf-mark { width: 26px; height: 28px; display: grid; place-items: center; background: #f9e9e4; color: #a84336; border-radius: 6px; font-weight: 800; font-size: 9px; }
+    .reader-actions { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 11px; }
+    .text-btn { min-height: 44px; border: 0; background: none; color: var(--green); font-size: 11px; cursor: pointer; padding: 6px 4px; font-weight: 650; }
+    .document-wrap { background: #f0f2ef; padding: 23px clamp(14px, 3vw, 38px); min-height: 610px; }
+    .document { margin: auto; max-width: 660px; min-height: 570px; padding: 48px clamp(26px, 5vw, 58px); background: white; box-shadow: 0 3px 14px rgba(15,35,45,.08); color: #344556; }
+    .doc-school { color: #71808a; font-size: 9px; text-align: center; letter-spacing: .12em; text-transform: uppercase; }
+    .doc-course { text-align: center; font-size: 10px; color: #72808b; margin-top: 5px; }
+    .document h2 { color: #263f50; font-size: 22px; letter-spacing: -.035em; line-height: 1.25; margin: 34px 0 7px; }
+    .doc-chapter { color: var(--green); font-size: 10px; font-weight: 700; margin-bottom: 23px; }
+    .document h3 { color: #2d4657; font-size: 14px; margin: 24px 0 8px; }
+    .document p { font-family: Georgia, "Times New Roman", serif; color: #485b67; font-size: 13px; line-height: 1.85; margin: 10px 0; }
+    .math { font-family: Georgia, "Times New Roman", serif; color: #264e61; background: #f5f8f7; border-left: 2px solid #79b3a4; padding: 10px 15px; font-size: 13px; margin: 15px 0; }
+    mark { background: #eff6d8; color: inherit; padding: 1px 2px; border-radius: 3px; transition: background .3s; }
+    mark.flash { background: #d2ea8c; }
+    .doc-footer { border-top: 1px solid #e8eceb; display: flex; justify-content: space-between; margin-top: 34px; padding-top: 10px; color: #8a969c; font-size: 9px; }
+    .tutor { display: flex; flex-direction: column; min-height: 664px; overflow: hidden; }
+    .tutor-head { min-height: 57px; padding: 0 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+    .tutor-brand { display: flex; align-items: center; gap: 9px; font-size: 13px; font-weight: 750; }
+    .spark { width: 28px; height: 28px; border-radius: 9px; background: var(--green-soft); color: var(--green); display: grid; place-items: center; }
+    .spark svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .online { display: inline-flex; align-items: center; gap: 6px; color: #4b7669; font-size: 10px; font-weight: 600; }
+    .online::before { content: ""; width: 6px; height: 6px; background: #55a27d; border-radius: 50%; }
+    .context { margin: 13px 14px 0; padding: 10px 11px; border: 1px solid #e7ece8; background: #fafbf8; border-radius: 9px; color: var(--muted); font-size: 10px; }
+    .context b { color: #465c67; font-weight: 650; }
+    .chat { flex: 1; padding: 14px; overflow: auto; min-height: 300px; max-height: 440px; }
+    .message { display: flex; gap: 8px; margin: 0 0 14px; align-items: flex-start; }
+    .message.user { justify-content: flex-end; }
+    .message .avatar { width: 25px; height: 25px; font-size: 9px; }
+    .message .bot-avatar { background: var(--green-soft); color: var(--green); border-radius: 8px; width: 25px; height: 25px; flex: none; display: grid; place-items: center; }
+    .bot-avatar svg { width: 14px; height: 14px; stroke: currentColor; fill: none; stroke-width: 1.8; }
+    .bubble { max-width: 88%; color: #3e505e; font-size: 12px; line-height: 1.65; }
+    .bubble p { margin: 1px 0 8px; }
+    .message.user .bubble { background: #edf4f0; border-radius: 12px 12px 3px 12px; padding: 9px 11px; color: #264b42; }
+    .cite { display: flex; width: 100%; gap: 9px; align-items: center; text-align: left; border: 1px solid #dfe9e2; background: #fbfdf9; padding: 9px 10px; border-radius: 9px; color: inherit; cursor: pointer; transition: border .16s, background .16s; }
+    .cite:hover { border-color: #9ac4b2; background: #f1f8f1; }
+    .cite-icon { width: 25px; height: 29px; border-radius: 5px; background: #e7f1ea; color: var(--green); display: grid; place-items: center; font-size: 9px; font-weight: 800; flex: none; }
+    .cite strong { display: block; font-size: 10px; color: #3c534b; }
+    .cite small { display: block; margin-top: 2px; color: #79888a; font-size: 9px; }
+    .message-time { display: block; font-size: 9px; color: #9aa5a8; margin-top: 4px; }
+    .quick-prompts { display: flex; gap: 8px; padding: 1px 14px 10px; overflow-x: auto; scrollbar-width: thin; }
+    .prompt { min-height: 44px; border: 1px solid #dce8e1; color: #49675e; background: #fff; padding: 6px 12px; border-radius: 999px; font-size: 10px; white-space: nowrap; cursor: pointer; }
+    .prompt:hover { background: var(--green-soft); border-color: #b5d5c5; }
+    .composer { margin: 0 13px 9px; padding: 9px 10px 8px; border: 1px solid #dbe4df; border-radius: 12px; transition: border .15s, box-shadow .15s; }
+    .composer:focus-within { border-color: #80b7a4; box-shadow: 0 0 0 3px rgba(43,132,103,.09); }
+    .composer textarea { display: block; width: 100%; resize: vertical; min-height: 40px; max-height: 96px; border: 0; outline: 0; color: var(--ink); font-size: 12px; line-height: 1.5; background: transparent; }
+    .composer textarea::placeholder { color: #96a2a2; }
+    .composer-foot { display: flex; justify-content: space-between; align-items: center; color: #94a1a1; font-size: 9px; }
+    .send { width: 44px; height: 44px; display: grid; place-items: center; border: 0; border-radius: 9px; color: white; background: var(--green); cursor: pointer; transition: background .16s, transform .16s; }
+    .send:hover { background: var(--green-dark); transform: translateY(-1px); }
+    .send svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+    .demo-disclosure { text-align: center; color: #8a969a; font-size: 9px; padding: 0 10px 12px; }
+    .toast { position: fixed; left: 50%; bottom: 22px; z-index: 20; transform: translate(-50%, 16px); opacity: 0; pointer-events: none; padding: 10px 14px; background: #183e36; color: white; border-radius: 10px; box-shadow: var(--shadow); font-size: 12px; transition: opacity .2s, transform .2s; }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .mobile-menu { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0; }
+    @media (min-width: 1500px) { .workspace { grid-template-columns: minmax(560px, 1fr) 410px; } .document-wrap { min-height: 690px; } .tutor { min-height: 744px; } .chat { max-height: 510px; } }
+    @media (max-width: 1120px) { .app { grid-template-columns: 76px minmax(0, 1fr); } .sidebar { align-items: center; padding-inline: 9px; } .brand { padding: 0 0 25px; } .brand-copy, .side-label, .nav-text, .course-shortcut .course-copy, .profile-copy { display: none; } .nav { width: 100%; } .nav-item { justify-content: center; padding: 0; } .course-shortcut { justify-content: center; padding: 8px; } .profile { padding: 14px 0 0; justify-content: center; width: 100%; } .workspace { grid-template-columns: minmax(0, 1fr) 350px; } .content { padding-inline: 22px; } .topbar { padding-inline: 22px; } }
+    @media (max-width: 850px) { .workspace { grid-template-columns: minmax(0, 1fr); } .tutor { min-height: 590px; } .chat { max-height: 360px; } .document-wrap { min-height: 520px; } .document { min-height: 470px; } .lesson-meta { display: none; } }
+    @media (max-width: 560px) {
+      .app { display: block; padding-bottom: 66px; }
+      .sidebar { position: fixed; inset: auto 0 0; width: 100%; height: 64px; padding: 5px 10px max(5px, env(safe-area-inset-bottom)); border-right: 0; border-top: 1px solid var(--line); display: block; background: rgba(255,255,255,.97); }
+      .brand, .side-label, .course-shortcut, .side-bottom { display: none; }
+      .nav { display: grid; grid-template-columns: repeat(4, 1fr); height: 100%; }
+      .nav-item { height: 52px; display: grid; place-content: center; justify-items: center; gap: 1px; padding: 2px 0; font-size: 9px; border-radius: 9px; }
+      .nav-text { display: block; font-size: 9px; }
+      .nav-item svg { width: 18px; height: 18px; }
+      .topbar { height: 56px; padding: 0 14px; }
+      .crumbs { font-size: 10px; gap: 5px; }
+      .demo-label { font-size: 9px; padding: 4px 7px; }
+      .content { padding: 20px 12px 22px; }
+      .page-heading { margin-bottom: 14px; }
+      h1 { font-size: 25px; }
+      .page-desc { font-size: 12px; max-width: 300px; }
+      .workspace { gap: 12px; }
+      .reader, .tutor { border-radius: 12px; }
+      .reader-toolbar { padding-inline: 12px; }
+      .reader-actions { gap: 4px; font-size: 10px; }
+      .document-wrap { padding: 12px 8px; min-height: 465px; }
+      .document { padding: 33px 24px; min-height: 440px; }
+      .document h2 { font-size: 20px; }
+      .document p { font-size: 12px; }
+      .tutor { min-height: 570px; }
+      .chat { min-height: 270px; max-height: 340px; }
+      .quick-prompts { padding-inline: 10px; }
+      .composer { margin-inline: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; } }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar" aria-label="Điều hướng chính">
+      <a class="brand" href="#home" aria-label="DUTLearn, trang chủ">
+        <span class="brand-mark" aria-hidden="true">D</span>
+        <span class="brand-copy"><span class="brand-name">DUTLearn</span><span class="brand-sub">Không gian học tập</span></span>
+      </a>
+      <div class="side-label">Không gian của tôi</div>
+      <nav class="nav">
+        <button class="nav-item" data-section="Tổng quan"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="7" height="8" rx="1.5"/><rect x="14" y="3" width="7" height="5" rx="1.5"/><rect x="14" y="12" width="7" height="9" rx="1.5"/><rect x="3" y="15" width="7" height="6" rx="1.5"/></svg><span class="nav-text">Tổng quan</span></button>
+        <button class="nav-item active" data-section="Môn học"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H20v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M4 5.5v16M8 7h8M8 11h8"/></svg><span class="nav-text">Môn học</span></button>
+        <button class="nav-item" data-section="Bài tập"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="m8 10 2 2 5-5M8 16h8"/></svg><span class="nav-text">Bài tập</span></button>
+        <button class="nav-item" data-section="Tiến độ"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 19V5M4 19h17"/><path d="m7 15 4-4 3 2 6-7"/></svg><span class="nav-text">Tiến độ</span></button>
+      </nav>
+      <div class="side-label" style="margin-top:18px">Đang học</div>
+      <button class="course-shortcut" aria-label="Mở môn Đại số tuyến tính">
+        <span class="course-icon" aria-hidden="true">ĐS</span><span class="course-copy"><span class="course-name">Đại số tuyến tính</span><span class="course-sub">HK1 · Nhóm học tập 02</span></span>
+      </button>
+      <div class="side-bottom">
+        <div class="side-label">Tài khoản</div>
+        <div class="profile"><span class="avatar" aria-hidden="true">HV</span><span class="profile-copy"><span class="profile-name">Nguyễn Văn Huy</span><span class="profile-role">Sinh viên</span></span></div>
+      </div>
+    </aside>
+
+    <main class="main" id="home">
+      <header class="topbar">
+        <div class="crumbs"><span>Không gian học tập</span><span aria-hidden="true">/</span><strong>Đại số tuyến tính</strong></div>
+        <div class="top-actions"><span class="demo-label">Bản demo · Dữ liệu minh họa</span><button class="icon-btn" id="helpButton" aria-label="Thông tin bản demo" title="Thông tin bản demo"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="9"/><path d="M9.6 9a2.5 2.5 0 1 1 4.1 1.9c-1 .8-1.7 1.1-1.7 2.6M12 17h.01"/></svg></button></div>
+      </header>
+
+      <div class="content">
+        <div class="page-heading">
+          <div><div class="eyebrow">Đại số tuyến tính · Chương 2</div><h1>Ma trận và phép biến đổi</h1><p class="page-desc">Đọc học liệu, đặt câu hỏi và kiểm tra nguồn ngay trong bài học.</p></div>
+          <div class="lesson-meta"><span>Tuần 04</span><span>·</span><span>8 phút đọc</span></div>
+        </div>
+
+        <section class="workspace" aria-label="Bài học và trợ giảng AI">
+          <article class="reader" aria-label="Trình đọc học liệu">
+            <div class="reader-toolbar">
+              <div class="reader-title"><span class="pdf-mark" aria-hidden="true">PDF</span><span>Dai_so_tuyen_tinh_Chuong_2.pdf</span></div>
+              <div class="reader-actions"><span>Trang <b id="pageNumber">12</b> / 28</span><button class="text-btn" id="openCitation">Mở nguồn</button></div>
+            </div>
+            <div class="document-wrap">
+              <div class="document" id="documentPage">
+                <div class="doc-school">Tài liệu học tập · Bản dùng thử</div>
+                <div class="doc-course">ĐẠI SỐ TUYẾN TÍNH</div>
+                <h2>Ma trận và phép biến đổi</h2>
+                <div class="doc-chapter">2.3 · Phép biến đổi sơ cấp trên hàng</div>
+                <p>Phép biến đổi sơ cấp trên hàng được sử dụng để đưa một ma trận về dạng thuận tiện hơn, đồng thời bảo toàn tập nghiệm của hệ phương trình tương ứng.</p>
+                <h3>Ba phép biến đổi cơ bản</h3>
+                <p><strong>Đổi chỗ hai hàng:</strong> vị trí của hai hàng được hoán đổi cho nhau. Phép biến đổi này thường được dùng để đưa phần tử khác không lên vị trí trụ.</p>
+                <p><strong>Nhân một hàng với số khác không:</strong> mọi phần tử trong hàng được nhân với cùng một hệ số khác không.</p>
+                <p id="sourceExcerpt"><mark>Thay một hàng bằng tổng của hàng đó với một bội của hàng khác. Phép biến đổi này giúp khử các phần tử nằm dưới hoặc trên phần tử trụ mà không làm thay đổi nghiệm của hệ.</mark></p>
+                <div class="math">Rᵢ ← Rᵢ + kRⱼ &nbsp;&nbsp; (i ≠ j)</div>
+                <h3>Gợi ý khi khử Gauss</h3>
+                <p>Chọn phần tử trụ, chuẩn hóa hàng nếu cần, sau đó khử các phần tử cùng cột. Ghi lại từng phép biến đổi để có thể kiểm tra lại kết quả.</p>
+                <div class="doc-footer"><span>Học liệu minh họa cho giao diện DUTLearn</span><span>12</span></div>
+              </div>
+            </div>
+          </article>
+
+          <aside class="tutor" aria-label="Trợ giảng AI">
+            <div class="tutor-head">
+              <div class="tutor-brand"><span class="spark" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2z"/><path d="m19 15 .9 2.1L22 18l-2.1.9L19 21l-.9-2.1L16 18l2.1-.9z"/></svg></span>Trợ giảng AI</div>
+              <span class="online">Theo học liệu</span>
+            </div>
+            <div class="context"><b>Đang tham chiếu</b> · Chương 2, trang 12</div>
+            <div class="chat" id="chat" aria-live="polite" aria-label="Nội dung trao đổi">
+              <div class="message">
+                <span class="bot-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2z"/></svg></span>
+                <div class="bubble"><p>Chào Huy! Bạn muốn tôi giải thích phần nào trong bài? Tôi sẽ dựa trên học liệu của môn và dẫn lại vị trí nguồn.</p><span class="message-time">Trợ giảng · 09:41</span></div>
+              </div>
+              <div class="message">
+                <span class="bot-avatar" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="m12 3 1.9 5.8L20 11l-6.1 2.2L12 19l-2-5.8L4 11l6-2.2z"/></svg></span>
+                <div class="bubble"><p>Đoạn đang đọc nói về phép cộng bội của một hàng vào hàng khác. Phép này giúp khử phần tử trong cột đang xét mà vẫn giữ nguyên tập nghiệm.</p><button class="cite" id="citationCard"><span class="cite-icon" aria-hidden="true">PDF</span><span><strong>Đại số tuyến tính · Chương 2</strong><small>Trang 12 · Phép biến đổi sơ cấp trên hàng</small></span></button><span class="message-time">Trợ giảng · 09:41</span></div>
+              </div>
+            </div>
+            <div class="quick-prompts" aria-label="Câu hỏi gợi ý">
+              <button class="prompt" data-prompt="Giải thích đoạn đang được đánh dấu">Giải thích đoạn này</button>
+              <button class="prompt" data-prompt="Cho tôi gợi ý từng bước để khử Gauss">Gợi ý từng bước</button>
+              <button class="prompt" data-prompt="Tạo một câu hỏi luyện tập về phép biến đổi sơ cấp">Tạo câu luyện tập</button>
+            </div>
+            <form class="composer" id="composer">
+              <label class="sr-only" for="question">Câu hỏi cho trợ giảng</label>
+              <textarea id="question" rows="2" placeholder="Hỏi về nội dung trong học liệu…" required></textarea>
+              <div class="composer-foot"><span>Enter để gửi · Shift + Enter xuống dòng</span><button class="send" type="submit" aria-label="Gửi câu hỏi"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m21 3-7.5 18-3.7-7.8L2 9.5z"/><path d="M21 3 9.8 13.2"/></svg></button></div>
+            </form>
+            <div class="demo-disclosure">Câu trả lời hiển thị là nội dung minh họa, chưa kết nối mô hình AI.</div>
+          </aside>
+        </section>
+      </div>
+    </main>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+  <script>
+    const chat = document.querySelector('#chat');
+    const question = document.querySelector('#question');
+    const toast = document.querySelector('#toast');
+    let toastTimer;
+    function announce(message) {
+      toast.textContent = message;
+      toast.classList.add('show');
+      clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toast.classList.remove('show'), 2400);
+    }
+    function addUserMessage(value) {
+      const row = document.createElement('div');
+      row.className = 'message user';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const p = document.createElement('p');
+      p.textContent = value;
+      bubble.append(p);
+      row.append(bubble);
+      chat.append(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function addTutorReply(value) {
+      const row = document.createElement('div');
+      row.className = 'message';
+      const icon = document.createElement('span');
+      icon.className = 'bot-avatar';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.textContent = 'AI';
+      const bubble = document.createElement('div');
+      bubble.className = 'bubble';
+      const p = document.createElement('p');
+      p.textContent = value;
+      const cite = document.createElement('button');
+      cite.className = 'cite';
+      cite.innerHTML = '<span class="cite-icon" aria-hidden="true">PDF</span><span><strong>Đại số tuyến tính · Chương 2</strong><small>Trang 12 · Phép biến đổi sơ cấp trên hàng</small></span>';
+      cite.addEventListener('click', focusSource);
+      bubble.append(p, cite);
+      row.append(icon, bubble);
+      chat.append(row);
+      chat.scrollTop = chat.scrollHeight;
+    }
+    function mockReply(text) {
+      const value = text.toLocaleLowerCase('vi');
+      if (value.includes('gợi ý') || value.includes('từng bước') || value.includes('gauss')) {
+        return 'Hãy thử theo thứ tự này: chọn một phần tử trụ khác 0, dùng hàng chứa phần tử đó để khử các phần tử cùng cột, rồi chuyển sang cột kế tiếp. Bạn có thể gửi ma trận cụ thể để cùng kiểm tra từng bước.';
+      }
+      if (value.includes('luyện tập') || value.includes('câu hỏi')) {
+        return 'Câu luyện tập minh họa: Với ma trận bổ sung của một hệ, hãy nêu phép biến đổi hàng dùng để khử phần tử dưới vị trí trụ đầu tiên. Sau khi bạn làm thử, hãy đối chiếu từng bước với quy tắc trong học liệu.';
+      }
+      return 'Theo đoạn học liệu đang mở, phép biến đổi này thay một hàng bằng tổng của chính nó và một bội của hàng khác. Mục đích là khử một phần tử trong cột đang xét, đồng thời giữ nguyên tập nghiệm của hệ.';
+    }
+    document.querySelector('#composer').addEventListener('submit', event => {
+      event.preventDefault();
+      const value = question.value.trim();
+      if (!value) return;
+      addUserMessage(value);
+      question.value = '';
+      question.disabled = true;
+      setTimeout(() => {
+        addTutorReply(mockReply(value));
+        question.disabled = false;
+        question.focus();
+      }, 420);
+    });
+    question.addEventListener('keydown', event => {
+      if (event.key === 'Enter' && !event.shiftKey) {
+        event.preventDefault();
+        document.querySelector('#composer').requestSubmit();
+      }
+    });
+    document.querySelectorAll('[data-prompt]').forEach(button => button.addEventListener('click', () => {
+      question.value = button.dataset.prompt;
+      question.focus();
+    }));
+    function focusSource() {
+      document.querySelector('#sourceExcerpt').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      const mark = document.querySelector('#sourceExcerpt mark');
+      mark.classList.add('flash');
+      setTimeout(() => mark.classList.remove('flash'), 1400);
+      announce('Đang mở nguồn: Chương 2, trang 12');
+    }
+    document.querySelector('#citationCard').addEventListener('click', focusSource);
+    document.querySelector('#openCitation').addEventListener('click', focusSource);
+    document.querySelector('#helpButton').addEventListener('click', () => announce('Đây là prototype giao diện với dữ liệu mẫu, chưa kết nối tài khoản hoặc AI.'));
+    document.querySelectorAll('.nav-item').forEach(button => button.addEventListener('click', () => {
+      document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
+      button.classList.add('active');
+      if (button.dataset.section !== 'Môn học') announce(`Bản demo hiện minh họa màn hình Môn học. Mục “${button.dataset.section}” sẽ được bổ sung sau.`);
+    }));
+    document.querySelector('.course-shortcut').addEventListener('click', () => announce('Bạn đang xem môn Đại số tuyến tính.'));
+  </script>
+</body>
+</html>

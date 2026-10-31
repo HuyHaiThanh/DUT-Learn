@@ -1,1 +1,4 @@
 /docs
+/.codex-build/
+
+.env
