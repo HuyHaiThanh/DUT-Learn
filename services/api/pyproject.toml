@@ -1,0 +1,20 @@
+[project]
+name = "dutlearn-api"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = ["fastapi>=0.115,<1", "uvicorn>=0.34,<1", "pydantic-settings>=2,<3", "sqlalchemy>=2,<3", "psycopg[binary]>=3,<4", "alembic>=1.15,<2", "pgvector>=0.3,<1", "argon2-cffi>=23,<26", "httpx>=0.28,<1"]
+
+[dependency-groups]
+dev = ["pytest>=8,<10", "ruff>=0.11,<1", "mypy>=1.15,<2"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP"]
+[tool.mypy]
+python_version = "3.11"
+strict = true
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]

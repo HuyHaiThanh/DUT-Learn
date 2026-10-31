@@ -1,0 +1,43 @@
+name: ${COMPOSE_PROJECT_NAME:-dut_t04}
+services:
+  db:
+    image: pgvector/pgvector:pg16
+    environment:
+      POSTGRES_USER: dutlearn
+      POSTGRES_PASSWORD: dutlearn
+      POSTGRES_DB: dutlearn
+    ports:
+      - "127.0.0.1:${DUT_DB_PORT:-5433}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-test-db.sql:/docker-entrypoint-initdb.d/01-test-db.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dutlearn -d dutlearn"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+  api:
+    profiles: [full]
+    build: ../services/api
+    environment:
+      DUT_DATABASE_URL: postgresql+psycopg://dutlearn:dutlearn@db:5432/dutlearn
+      DUT_LLM_BASE_URL: http://host.docker.internal:11434
+      DUT_DATA_DIR: /data
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    volumes:
+      - ../data:/data
+    ports:
+      - "127.0.0.1:8000:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+  web:
+    profiles: [full]
+    build: ../apps/web
+    ports:
+      - "127.0.0.1:8080:80"
+    depends_on:
+      - api
+volumes:
+  postgres_data:

@@ -1,4 +1,25 @@
-/docs
+# Tai lieu noi bo: de cuong, ke hoach, nghien cuu, bao cao (khong cong khai)
+/private/
 /.codex-build/
 
+# Bi mat va du lieu chay
 .env
+.env.*
+!.env.example
+data/
+evals/runs/
+
+# Cau hinh ca nhan cua Claude Code
+CLAUDE.local.md
+.claude/settings.local.json
+
+# Build va cache
+**/__pycache__/
+node_modules/
+.venv/
+dist/
+*.tsbuildinfo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.playwright-mcp/
