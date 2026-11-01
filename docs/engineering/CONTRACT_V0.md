@@ -91,7 +91,7 @@ Lỗi chung: `{"error": {"code": "string_snake", "message": "tiếng Việt", "r
 | POST | /auth/logout | user | thu hồi phiên |
 | GET | /auth/me | user | `{id,email,full_name,system_role,classes:[{class_id,role}]}` |
 | POST/GET | /admin/users, /admin/courses, /admin/classes, /admin/classes/{id}/members | admin | CRUD tối thiểu |
-| GET | /classes | user | lớp của tôi |
+| GET | /classes | user | lớp `open` mà tôi là thành viên: `[{id, course_id, code, term, status, content_version, course_code, course_name, role}]` (T05) |
 | GET | /classes/{id} | member | gồm lessons đã công bố (GV thấy cả nháp) |
 | POST/PATCH | /classes/{id}/lessons, /lessons/{id} | lecturer | |
 | GET | /classes/{id}/materials | member | SV: chỉ bản công bố |
