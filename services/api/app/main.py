@@ -10,13 +10,19 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
 
+from app.admin.router import router as admin_router
+from app.auth.router import router as auth_router
 from app.config import get_settings
+from app.courses.router import router as courses_router
 from app.db import get_db
 from app.errors import error_response, http_error, validation_error
 
 app = FastAPI(title="DUTLearn API", version="0.1.0")
 app.add_exception_handler(HTTPException, http_error)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_error)  # type: ignore[arg-type]
+app.include_router(auth_router)
+app.include_router(admin_router)
+app.include_router(courses_router)
 logger = logging.getLogger(__name__)
 
 

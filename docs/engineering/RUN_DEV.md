@@ -95,3 +95,21 @@ Agent Codex tạo mã trong sandbox (bị chặn Docker, subprocess esbuild và 
 - `npm ci`, `npm run lint`, `npm run typecheck`: đạt; `npm test`: `2 passed`; `npm run build`: thành công.
 - ADR-09: `docker run --rm --add-host host.docker.internal:host-gateway curlimages/curl -sS http://host.docker.internal:11434/api/version` → `{"version":"0.40.13"}` (Ollama native bind mặc định, không đổi cấu hình host).
 - Chưa kiểm chứng: `docker compose --profile full` build API/web, giao diện trên trình duyệt, GitHub CI.
+
+## Tài khoản mẫu (T05, chỉ dùng phát triển)
+
+Sau migration, tại `services/api` chạy `uv run python -m app.seed`. Chạy lại không tạo trùng và không đổi mật khẩu/tài khoản đã tồn tại. Đặt `DUT_SEED_PASSWORD` trước lần seed đầu; mặc định dev là `dutlearn-dev`. Không dùng seed hoặc mật khẩu mẫu cho triển khai thật.
+
+| Email | Vai trò | Lớp |
+| --- | --- | --- |
+| admin@dutlearn.local | Admin | Không ghi danh, không mặc nhiên đọc nội dung lớp |
+| gv1@dutlearn.local | Giảng viên | KTLT-01, KTLT-CLOSED |
+| gv2@dutlearn.local | Giảng viên | KTLT-02 |
+| sv1@dutlearn.local | Sinh viên | KTLT-01, KTLT-CLOSED |
+| sv2@dutlearn.local | Sinh viên | KTLT-01 |
+| sv3@dutlearn.local | Sinh viên | KTLT-02 |
+| sv4@dutlearn.local | Sinh viên | KTLT-02 |
+
+Môn `KTLT` — Kỹ thuật lập trình; học kỳ `2026-2027.1`. `KTLT-CLOSED` là lớp đóng: sinh viên không đọc được; danh sách `/api/classes` chỉ trả lớp mở.
+
+Phiên mặc định 12 giờ (`DUT_SESSION_TTL_HOURS`), cookie `dut_session` có HttpOnly/SameSite=Lax. Đặt `DUT_COOKIE_SECURE=true` khi dùng HTTPS; dev HTTP mặc định false. Mọi request ghi, kể cả đăng nhập/đăng xuất, cần `X-DUT-CSRF: 1`.
