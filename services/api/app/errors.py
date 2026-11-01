@@ -4,6 +4,13 @@ from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException
 
 
+class APIError(HTTPException):
+    def __init__(self, status: int, code: str, message: str) -> None:
+        super().__init__(status_code=status)
+        self.code = code
+        self.message = message
+
+
 def error_response(request: Request, status: int, code: str, message: str) -> JSONResponse:
     request_id = request.state.request_id
     return JSONResponse(
@@ -14,6 +21,8 @@ def error_response(request: Request, status: int, code: str, message: str) -> JS
 
 
 async def http_error(request: Request, exc: HTTPException) -> JSONResponse:
+    if isinstance(exc, APIError):
+        return error_response(request, exc.status_code, exc.code, exc.message)
     codes = {404: "not_found", 405: "method_not_allowed", 401: "unauthorized", 403: "forbidden"}
     messages = {
         404: "Không tìm thấy tài nguyên.",
