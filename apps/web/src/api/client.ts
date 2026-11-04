@@ -1,5 +1,5 @@
 export class ApiError extends Error {
-  constructor(public status: number, public code: string, message: string, public request_id?: string) {
+  constructor(public status: number, public code: string, message: string, public request_id?: string, public details?: Record<string, unknown>) {
     super(message);
     this.name = 'ApiError';
   }
@@ -16,7 +16,8 @@ export async function apiFetch<T>(path: string, init: RequestInit = {}): Promise
     const body = await response.json().catch(() => null);
     throw new ApiError(response.status, body?.error?.code ?? 'request_failed',
       body?.error?.message ?? 'Không thể kết nối máy chủ. Vui lòng thử lại.',
-      body?.error?.request_id ?? response.headers.get('X-Request-ID') ?? undefined);
+      body?.error?.request_id ?? response.headers.get('X-Request-ID') ?? undefined,
+      body?.error?.details);
   }
   if (response.status === 204) return undefined as T;
   return response.json() as Promise<T>;
