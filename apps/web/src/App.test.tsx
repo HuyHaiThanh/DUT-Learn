@@ -12,6 +12,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
   return vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return response(me);
     if (path === '/api/classes') return response(classes);
+    if (path === '/api/admin/users') return response([]);
     if (path === '/api/auth/login') return response({});
     if (path === '/api/auth/logout') return new Response(null, { status: 204 });
     throw new Error(`Unexpected request ${path}`);
@@ -204,11 +205,13 @@ it('trạng thái tải lớp có thông báo trợ năng', async () => {
   mount('/hoc');
   expect(await screen.findByText('Đang tải danh sách lớp…')).toHaveAttribute('role', 'status');
 });
-it('quản trị hiển thị ba hàng với mô tả và nhãn sắp có', async () => {
+it('quản trị chuyển tới người dùng và có điều hướng con', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, system_role: 'admin', classes: [] })); mount('/quan-tri');
   expect(await screen.findByRole('heading', { name: 'Quản trị' })).toBeInTheDocument();
-  for (const name of ['Người dùng', 'Môn học', 'Lớp học & ghi danh']) expect(screen.getByRole('heading', { name })).toBeInTheDocument();
-  expect(screen.getAllByText('Sắp có')).toHaveLength(3);
+  expect(await screen.findByRole('heading', { name: 'Người dùng' })).toBeInTheDocument();
+  expect(screen.getByLabelText('Đường dẫn')).toHaveTextContent('/quan-tri/nguoi-dung');
+  expect(screen.getByRole('link', { name: 'Người dùng' })).toHaveAttribute('aria-current', 'page');
+  for (const name of ['Học phần', 'Lớp học phần']) expect(screen.getByRole('link', { name })).toBeInTheDocument();
 });
 it('404 có đường về trang chủ theo vai trò', async () => {
   vi.stubGlobal('fetch', mockApi(lecturer)); mount('/khong-ton-tai');
