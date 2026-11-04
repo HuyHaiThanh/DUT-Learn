@@ -87,19 +87,25 @@ def test_credentials_do_not_disclose_account(db_client: TestClient, auth_db: Ses
     known = login(db_client, password="wrong")
     unknown = login(db_client, account="unknown", password="wrong")
     assert known.status_code == unknown.status_code == 401
-    for field in ["code", "message"]:
+    for field in ["code", "message", "details"]:
         assert known.json()["error"][field] == unknown.json()["error"][field]
+    assert known.json()["error"]["details"] == {"attempts_remaining": 4}
     assert known.json()["error"]["code"] == "invalid_credentials"
     assert auth_db.scalar(select(func.count()).select_from(LoginAttempt)) == 2
 
 
 @pytest.mark.parametrize("account", ["sv1", "unknown"])
 def test_rate_limit(db_client: TestClient, auth_db: Session, account: str):
+    remaining = []
     for _ in range(5):
-        assert login(db_client, account, "wrong").status_code == 401
+        failed = login(db_client, account, "wrong")
+        assert failed.status_code == 401
+        remaining.append(failed.json()["error"]["details"]["attempts_remaining"])
+    assert remaining == [4, 3, 2, 1, 0]
     response = login(db_client, account)
     assert response.status_code == 429
     assert response.json()["error"]["code"] == "too_many_attempts"
+    assert 0 < response.json()["error"]["details"]["retry_after_seconds"] <= 900
     # A different email is not blocked; then the rolling window expires.
     assert login(db_client, "gv1").status_code == 200
     auth_db.execute(text("UPDATE login_attempts SET attempted_at = now() - interval '16 minutes'"))

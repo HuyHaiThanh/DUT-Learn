@@ -57,6 +57,7 @@ Mọi bảng có `id` (UUID v4, server sinh), `created_at`, `updated_at` (timest
 | idempotency_keys | user_id, operation, key, payload_hash, response_ref_type, response_ref_id | unique(user_id, operation, key); cùng hash → trả kết quả cũ; khác hash → 409 `idempotency_conflict` |
 | practice_questions | class_id, lesson_id NULL, kind `mcq|short`, stem, options JSONB, answer_key, explanation, source_chunk_id NULL, source_version_id NULL, origin `ai|lecturer`, status `draft|approved|published|retired`, supersedes_id NULL, approved_by/at, published_at | answer_key/explanation không bao giờ vào chunks; sửa câu đã `published` = tạo câu mới `supersedes_id`, câu cũ `retired` |
 | practice_attempts | question_id, student_id, question_snapshot JSONB, response, is_correct NULL, submitted_at | chống trùng qua idempotency_keys (operation `practice_attempt`) |
+| reading_positions | user_id, material_id, version_id, page_index, updated_at | unique(user_id, material_id); chỉ trả về khi version còn hiệu lực và người dùng còn quyền đọc (T10/T13) |
 | learning_events | user_id, class_id, type `material_opened|question_asked|citation_opened|submission_created|practice_attempted|feedback_viewed`, ref_type, ref_id, occurred_at | không có updated_at |
 | audit_events | actor_id, action, target_type, target_id, detail JSONB | |
 
@@ -83,11 +84,11 @@ AND :user là thành viên của :class_id
 
 ## 5 API v0 (tiền tố `/api`)
 
-Lỗi chung: `{"error": {"code": "string_snake", "message": "tiếng Việt", "request_id": "..."}}`. Mọi response có header `X-Request-ID`. Request ghi (POST/PUT/PATCH/DELETE) phải có header `X-DUT-CSRF: 1`.
+Lỗi chung: `{"error": {"code": "string_snake", "message": "tiếng Việt", "request_id": "...", "details": {} }}` (`details` tùy chọn, chỉ chứa dữ liệu an toàn để hiển thị). Mọi response có header `X-Request-ID`. Request ghi (POST/PUT/PATCH/DELETE) phải có header `X-DUT-CSRF: 1`.
 
 | Method | Path | Vai trò | Ghi chú |
 | --- | --- | --- | --- |
-| POST | /auth/login | — | `{email,password}` → set cookie; giới hạn 5 lần sai/15 phút/email |
+| POST | /auth/login | — | `{email,password}` → set cookie; giới hạn 5 lần sai/15 phút/email. Lỗi 401 `invalid_credentials` kèm `error.details.attempts_remaining` (số lần còn lại trước khi khóa, tính theo email đã gửi, kể cả email không tồn tại — để không lộ tài khoản); 429 `too_many_attempts` kèm `error.details.retry_after_seconds` |
 | POST | /auth/logout | user | thu hồi phiên |
 | GET | /auth/me | user | `{id,email,full_name,system_role,classes:[{class_id,role}]}` |
 | POST/GET | /admin/users, /admin/courses, /admin/classes, /admin/classes/{id}/members | admin | CRUD tối thiểu |
@@ -116,7 +117,8 @@ Lỗi chung: `{"error": {"code": "string_snake", "message": "tiếng Việt", "r
 | GET | /classes/{id}/practice | member | SV: published, không answer_key |
 | POST | /practice/{id}/attempts | student | `{response, idempotency_key}`; trả kết quả + giải thích sau nộp |
 | POST | /events | member | chỉ các type phía client (material_opened, citation_opened, feedback_viewed) |
-| GET | /classes/{id}/progress/me ; /classes/{id}/progress | student ; lecturer | |
+| GET | /classes/{id}/progress/me ; /classes/{id}/progress | student ; lecturer | Tách `activity` (học liệu đã mở/tổng đã công bố, câu hỏi đã hỏi) và `results` (bài đã nộp/tổng, điểm đã công bố, luyện tập đúng/đã làm). Chỉ tính từ sự kiện và kết quả thật (T23) |
+| PUT | /reading-position | member | `{material_id, version_id, page_index}`; GET /me/continue → vị trí đọc gần nhất còn hiệu lực hoặc `null` (T13) |
 
 ### 5.1 Hợp đồng trợ giảng
 
