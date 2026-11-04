@@ -6,10 +6,14 @@ export interface Me {
   system_role: 'admin' | 'user';
   classes: { class_id: string; role: ClassRole }[];
 }
-// GET /classes: class columns from CONTRACT_V0 section 3.
+// GET /classes: CONTRACT_V0 section 5.
 export interface ClassSummary {
   id: string;
   course_id: string;
+  course_code: string;
+  course_name: string;
+  role: ClassRole;
+  content_version: number;
   code: string;
   term: string;
   status: 'open' | 'closed';

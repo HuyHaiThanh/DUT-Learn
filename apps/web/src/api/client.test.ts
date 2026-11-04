@@ -14,9 +14,9 @@ it('GET không thêm CSRF, giữ header tùy chỉnh', async () => {
   expect(headers.has('X-DUT-CSRF')).toBe(false); expect(headers.get('X-Test')).toBe('yes');
 });
 it('parse lỗi chuẩn và request_id', async () => {
-  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'invalid_credentials', message: 'Sai mật khẩu', request_id: 'req1' } }), { status: 401 })));
+  vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response(JSON.stringify({ error: { code: 'invalid_credentials', message: 'Sai mật khẩu', request_id: 'req1', details: { attempts_remaining: 3 } } }), { status: 401 })));
   const error = await apiFetch('/auth/login', { method: 'POST' }).catch(e => e);
-  expect(error).toBeInstanceOf(ApiError); expect(error).toMatchObject({ status: 401, code: 'invalid_credentials', message: 'Sai mật khẩu', request_id: 'req1' });
+  expect(error).toBeInstanceOf(ApiError); expect(error).toMatchObject({ status: 401, code: 'invalid_credentials', message: 'Sai mật khẩu', request_id: 'req1', details: { attempts_remaining: 3 } });
 });
 it('lỗi proxy không có JSON vẫn thành ApiError', async () => {
   vi.stubGlobal('fetch', vi.fn().mockResolvedValue(new Response('Bad gateway', { status: 502, headers: { 'X-Request-ID': 'proxy1' } })));
