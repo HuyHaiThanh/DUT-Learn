@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Lớp của tôi</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F8;color:#182434;font-family:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;color-scheme:light}
+a{color:#0B5CAD}a:hover{color:#084887}
+.cols{display:flex;flex-wrap:wrap;gap:24px;align-items:flex-start}
+.main-col{flex:999 1 620px;min-width:0}
+.side-col{flex:1 1 300px;min-width:0}
+button:focus-visible,a:focus-visible,select:focus-visible{outline:2px solid #0B5CAD;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; background: #F3F5F8; font-family: 'Be Vietnam Pro', 'Segoe UI', system-ui, sans-serif; color: #182434">
+
+  <header style="height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 20px; padding: 0 20px; background: #FFFFFF; border-bottom: 1px solid #D9E0E8">
+    <a href="DanhSachLop.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #182434">
+      <span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 6px; background: #0B5CAD; color: #FFFFFF; display: grid; place-items: center; font-weight: 700; font-size: 15px">D</span>
+      <span style="font-weight: 700; font-size: 17px">DUTLearn</span>
+    </a>
+    <nav aria-label="Điều hướng chính" style="display: flex; gap: 4px; font-size: 14px">
+      <a href="DanhSachLop.dc.html" aria-current="page" style="padding: 8px 12px; border-radius: 6px; color: #084887; background: #EAF2FB; text-decoration: none; font-weight: 600">Học tập</a>
+    </nav>
+    <span style="flex: 1"></span>
+    <span style="font-size: 12px; color: #8A4B08; background: #FFF4E5; border: 1px solid #F0D3A8; padding: 3px 8px; border-radius: 4px">Dữ liệu minh họa</span>
+    <button type="button" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 4px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 14px; color: #182434; cursor: pointer">
+      <span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 50%; background: #EAF2FB; color: #084887; display: grid; place-items: center; font-weight: 600; font-size: 12px">NH</span>
+      Nguyễn Văn Huy
+    </button>
+  </header>
+
+  <div style="max-width: 1200px; margin: 0 auto; padding: 28px 24px 40px">
+    <div style="display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 20px">
+      <div>
+        <h1 style="margin: 0; font-size: 28px; font-weight: 700; letter-spacing: -0.01em">Chào Huy</h1>
+        <p style="margin: 4px 0 0; font-size: 15px; color: #4A596C">Học kỳ 1, 2026–2027 · Tuần 7</p>
+      </div>
+      <div style="display: flex; align-items: center; gap: 8px; font-size: 14px">
+        <label for="term" style="color: #4A596C">Học kỳ</label>
+        <select id="term" style="height: 38px; border: 1px solid #7C899A; border-radius: 6px; padding: 0 10px; font: inherit; color: #182434; background: #FFFFFF">
+          <option>Học kỳ 1, 2026–2027</option>
+          <option>Học kỳ 2, 2025–2026</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="cols">
+      <div class="main-col" style="display: flex; flex-direction: column; gap: 20px">
+
+        <a href="Main.dc.html" style="display: grid; grid-template-columns: 96px minmax(0, 1fr) auto; gap: 20px; align-items: center; padding: 18px 20px; background: #FFFFFF; border: 1px solid #D9E0E8; border-radius: 8px; text-decoration: none; color: #182434">
+          <span aria-hidden="true" style="height: 120px; background: #FFFFFF; border: 1px solid #D9E0E8; box-shadow: 0 1px 2px rgba(24,36,52,0.08); padding: 10px 9px; box-sizing: border-box; display: flex; flex-direction: column; gap: 5px; font-family: 'Source Serif 4', Georgia, serif; font-size: 7px; line-height: 1.3; color: #4A596C; overflow: hidden">
+            <span style="font-weight: 600; color: #182434; font-size: 8px">7.2 Khai báo và sử dụng con trỏ</span>
+            <span>Con trỏ là một biến dùng để lưu địa chỉ của một biến khác…</span>
+            <span style="background: #FFE79A; color: #182434">Toán tử * đặt trước tên con trỏ…</span>
+            <span style="background: #F1F4F8; height: 22px"></span>
+          </span>
+          <span style="min-width: 0">
+            <span style="display: block; font-size: 13px; color: #4A596C; margin-bottom: 4px">Tiếp tục đọc · Kỹ thuật lập trình</span>
+            <span style="display: block; font-size: 19px; font-weight: 600; line-height: 1.35">Giáo trình Lập trình căn bản, chương VII</span>
+            <span style="display: block; font-size: 14px; color: #4A596C; margin-top: 4px">Trang 133 / 199 · mở lần cuối 21:40 hôm qua · 2 câu hỏi với trợ giảng</span>
+          </span>
+          <span style="height: 40px; padding: 0 16px; border-radius: 6px; background: #0B5CAD; color: #FFFFFF; display: flex; align-items: center; font-weight: 600; font-size: 15px">Đọc tiếp</span>
+        </a>
+
+        <section aria-labelledby="classes">
+          <h2 id="classes" style="margin: 0 0 10px; font-size: 17px; font-weight: 600">Lớp đang học</h2>
+          <div style="background: #FFFFFF; border: 1px solid #D9E0E8; border-radius: 8px; overflow: hidden">
+            <a href="LopHoc.dc.html" style="display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 24px; align-items: center; padding: 16px 20px; text-decoration: none; color: #182434">
+              <span>
+                <span style="display: block; font-size: 17px; font-weight: 600">Kỹ thuật lập trình</span>
+                <span style="display: block; font-size: 14px; color: #4A596C; margin-top: 2px">KTLT-01 · [Tên giảng viên] · Tuần 7: Con trỏ</span>
+              </span>
+              <span style="font-size: 14px; color: #4A596C; text-align: right; font-variant-numeric: tabular-nums">12 học liệu<br>3 bài tập</span>
+              <svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#4A596C" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+            </a>
+          </div>
+          <p style="margin: 10px 0 0; font-size: 14px; color: #4A596C">Đợt thử nghiệm chỉ gồm học phần Kỹ thuật lập trình. Không thấy lớp của bạn? Liên hệ giảng viên phụ trách để được ghi danh.</p>
+        </section>
+      </div>
+
+      <aside class="side-col" style="display: flex; flex-direction: column; gap: 16px">
+        <section aria-labelledby="todo" style="background: #FFFFFF; border: 1px solid #D9E0E8; border-radius: 8px; padding: 16px">
+          <h2 id="todo" style="margin: 0 0 12px; font-size: 16px; font-weight: 600">Việc cần làm</h2>
+          <ul style="list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 12px; font-size: 14px">
+            <li style="display: grid; grid-template-columns: 52px 1fr; gap: 12px">
+              <span style="text-align: center; border: 1px solid #D9E0E8; border-radius: 6px; padding: 4px 0; font-variant-numeric: tabular-nums"><span style="display: block; font-size: 18px; font-weight: 700">20</span><span style="font-size: 12px; color: #4A596C">th 11</span></span>
+              <span><a href="LopHoc.dc.html" style="font-weight: 500; text-decoration: none">Bài tập 3: Hoán đổi bằng con trỏ</a><span style="display: block; color: #8A4B08">Chưa nộp · còn 5 ngày</span></span>
+            </li>
+            <li style="display: grid; grid-template-columns: 52px 1fr; gap: 12px">
+              <span style="text-align: center; border: 1px solid #D9E0E8; border-radius: 6px; padding: 4px 0; color: #4A596C; font-size: 12px; display: grid; place-items: center">tuần 7</span>
+              <span><a href="LopHoc.dc.html" style="font-weight: 500; text-decoration: none">Luyện tập: con trỏ cơ bản</a><span style="display: block; color: #4A596C">Còn 4 câu chưa làm</span></span>
+            </li>
+          </ul>
+        </section>
+        <section aria-labelledby="fb" style="background: #FFFFFF; border: 1px solid #D9E0E8; border-radius: 8px; padding: 16px">
+          <h2 id="fb" style="margin: 0 0 8px; font-size: 16px; font-weight: 600">Phản hồi mới</h2>
+          <p style="margin: 0; font-size: 14px; line-height: 1.55"><a href="LopHoc.dc.html" style="font-weight: 500; text-decoration: none">Bài tập 2: Mảng một chiều</a><br><span style="color: #4A596C">Điểm 9,0 · giảng viên nhận xét 2 tiêu chí · 30/10</span></p>
+        </section>
+      </aside>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

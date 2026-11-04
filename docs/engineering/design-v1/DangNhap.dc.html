@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đăng nhập DUTLearn</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;family=JetBrains+Mono:wght@400&amp;display=swap">
+<style>
+body{margin:0;background:#F3F5F8;color:#182434;font-family:"Be Vietnam Pro","Segoe UI",system-ui,sans-serif;color-scheme:light}
+a{color:#0B5CAD}a:hover{color:#084887}
+.wrap{display:flex;flex-wrap:wrap;min-height:100vh}
+.form-side{flex:1 1 440px;max-width:560px;min-width:0}
+.visual{flex:999 1 520px;min-width:0}
+@media (max-width:980px){.visual{display:none}.form-side{max-width:none}}
+button:focus-visible,a:focus-visible,input:focus-visible{outline:2px solid #0B5CAD;outline-offset:2px}
+</style>
+</helmet>
+<div class="wrap" style="background: #F3F5F8; font-family: 'Be Vietnam Pro', 'Segoe UI', system-ui, sans-serif; color: #182434">
+
+  <main class="form-side" style="background: #FFFFFF; border-right: 1px solid #D9E0E8; display: flex; flex-direction: column; padding: 40px 56px; box-sizing: border-box">
+    <div style="display: flex; align-items: center; gap: 10px">
+      <span aria-hidden="true" style="width: 32px; height: 32px; border-radius: 7px; background: #0B5CAD; color: #FFFFFF; display: grid; place-items: center; font-weight: 700; font-size: 17px">D</span>
+      <span style="font-weight: 700; font-size: 19px">DUTLearn</span>
+    </div>
+
+    <div style="flex: 1; display: flex; flex-direction: column; justify-content: center; max-width: 400px; padding: 40px 0">
+      <h1 style="margin: 0 0 6px; font-size: 26px; font-weight: 700; letter-spacing: -0.01em">Đăng nhập</h1>
+      <p style="margin: 0 0 28px; font-size: 15px; color: #4A596C; line-height: 1.55">Học liệu và trợ giảng theo lớp học phần, Khoa Công nghệ Thông tin.</p>
+
+      <form style="display: flex; flex-direction: column; gap: 18px">
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="email" style="font-size: 14px; font-weight: 500">Email</label>
+          <input id="email" type="email" autocomplete="username" value="102220108@sv1.dut.udn.vn" style="height: 44px; box-sizing: border-box; border: 1px solid #7C899A; border-radius: 6px; padding: 0 12px; font: inherit; font-size: 15px; color: #182434">
+        </div>
+        <div style="display: flex; flex-direction: column; gap: 6px">
+          <label for="password" style="font-size: 14px; font-weight: 500">Mật khẩu</label>
+          <input id="password" type="password" autocomplete="current-password" value="matkhau" aria-describedby="err" aria-invalid="true" style="height: 44px; box-sizing: border-box; border: 2px solid #B42318; border-radius: 6px; padding: 0 12px; font: inherit; font-size: 15px; color: #182434">
+          <p id="err" role="alert" style="margin: 0; font-size: 14px; color: #B42318">Email hoặc mật khẩu không đúng. Bạn còn 3 lần thử trước khi bị tạm khóa 15 phút.</p>
+        </div>
+        <button type="submit" style="height: 44px; border: 0; border-radius: 6px; background: #0B5CAD; color: #FFFFFF; font: inherit; font-size: 15px; font-weight: 600; cursor: pointer">Đăng nhập</button>
+      </form>
+
+      <p style="margin: 22px 0 0; font-size: 14px; color: #4A596C; line-height: 1.55">Tài khoản do quản trị viên cấp cho sinh viên và giảng viên tham gia thử nghiệm. Quên mật khẩu hoặc chưa có tài khoản: liên hệ [email hỗ trợ].</p>
+    </div>
+
+    <p style="margin: 0; font-size: 13px; color: #4A596C; line-height: 1.5">Đồ án tốt nghiệp · Trường Đại học Bách khoa, Đại học Đà Nẵng<br>Phiên bản thử nghiệm, chưa phải hệ thống chính thức của trường.</p>
+  </main>
+
+  <div class="visual" aria-hidden="true" style="display: flex; align-items: center; justify-content: center; padding: 48px; box-sizing: border-box; background: #EAF2FB">
+    <div style="display: flex; gap: 20px; align-items: flex-start; max-width: 760px; width: 100%">
+      <div style="flex: 1 1 0; min-width: 0; background: #FFFFFF; border: 1px solid #D9E0E8; box-shadow: 0 1px 2px rgba(24,36,52,0.06); padding: 32px 34px; font-family: 'Source Serif 4', Georgia, serif; font-size: 15px; line-height: 1.65; color: #182434">
+        <p style="margin: 0 0 4px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 12px; color: #4A596C">Chương VII. Kiểu con trỏ</p>
+        <p style="margin: 0 0 12px; font-size: 19px; font-weight: 600">7.2 Khai báo và sử dụng con trỏ</p>
+        <p style="margin: 0 0 10px">Con trỏ là một biến dùng để lưu địa chỉ của một biến khác trong bộ nhớ.</p>
+        <p style="margin: 0 0 12px"><span style="background: #FFE79A; box-shadow: 0 0 0 2px #E8C34D">Toán tử * đặt trước tên con trỏ cho phép truy cập giá trị tại địa chỉ mà con trỏ giữ.</span></p>
+        <pre style="margin: 0; padding: 12px 14px; background: #F1F4F8; border: 1px solid #D9E0E8; border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13px; line-height: 1.6">int *p = &amp;a;
+*p = 10;</pre>
+      </div>
+      <div style="flex: 0 0 260px; display: flex; flex-direction: column; gap: 10px; margin-top: 70px">
+        <div style="align-self: flex-end; background: #FFFFFF; border: 1px solid #D9E0E8; padding: 10px 12px; border-radius: 8px; font-size: 14px">Vì sao *p = 10 đổi được a?</div>
+        <div style="background: #FFFFFF; border: 1px solid #D9E0E8; padding: 12px 14px; border-radius: 8px; font-size: 14px; line-height: 1.55">Vì *p chính là ô nhớ của a <span style="font-size: 12px; font-weight: 600; background: #FFE79A; border-radius: 3px; padding: 0 4px">1</span></div>
+        <div style="display: grid; grid-template-columns: 18px 1fr auto; gap: 8px; padding: 8px 10px; border: 1px solid #E8C34D; background: #FFF5CC; border-radius: 6px; font-size: 12px"><span style="font-weight: 700">1</span><span>Giáo trình, mục 7.2</span><span style="color: #4A596C">tr. 133</span></div>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":900}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>

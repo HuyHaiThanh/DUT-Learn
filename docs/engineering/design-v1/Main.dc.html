@@ -1,0 +1,192 @@
+<!doctype html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Đọc học liệu và hỏi trợ giảng</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600;700&amp;family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&amp;family=JetBrains+Mono:wght@400;500&amp;display=swap">
+<style>
+:root{
+  --brand:#0B5CAD; --brand-ink:#084887; --brand-tint:#EAF2FB;
+  --ink:#182434; --ink-2:#4A596C; --ground:#F3F5F8; --surface:#FFFFFF;
+  --line:#D9E0E8; --control:#7C899A; --cite:#FFE79A; --cite-soft:#FFF5CC;
+  --warn:#8A4B08; --warn-soft:#FFF4E5;
+  --ui:"Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
+  --read:"Source Serif 4", Georgia, "Times New Roman", serif;
+  --mono:"JetBrains Mono", Consolas, "Courier New", monospace;
+  /* layout: thanh ngữ cảnh 1 hàng, mục lục bài | tài liệu | trợ giảng */
+}
+body{margin:0;background:var(--ground);color:var(--ink);font-family:var(--ui);color-scheme:light}
+a{color:#0B5CAD}a:hover{color:#084887}
+.work{display:grid;grid-template-columns:248px minmax(0,1fr) 404px;min-height:calc(100vh - 56px)}
+@media (max-width:1180px){.work{grid-template-columns:minmax(0,1fr) 380px}.outline{display:none}}
+@media (max-width:820px){.work{grid-template-columns:minmax(0,1fr)}.tutor{border-left:0;border-top:1px solid var(--line)}}
+button:focus-visible,a:focus-visible,textarea:focus-visible{outline:2px solid #0B5CAD;outline-offset:2px}
+</style>
+</helmet>
+<div style="min-height: 100vh; display: flex; flex-direction: column; background: #F3F5F8; font-family: 'Be Vietnam Pro', 'Segoe UI', system-ui, sans-serif; color: #182434">
+
+  <header style="height: 56px; box-sizing: border-box; display: flex; align-items: center; gap: 20px; padding: 0 20px; background: #FFFFFF; border-bottom: 1px solid #D9E0E8; flex-wrap: wrap">
+    <a href="DanhSachLop.dc.html" style="display: flex; align-items: center; gap: 10px; text-decoration: none; color: #182434">
+      <span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 6px; background: #0B5CAD; color: #FFFFFF; display: grid; place-items: center; font-weight: 700; font-size: 15px">D</span>
+      <span style="font-weight: 700; font-size: 17px; letter-spacing: -0.01em">DUTLearn</span>
+    </a>
+    <nav aria-label="Vị trí hiện tại" style="display: flex; align-items: center; gap: 8px; font-size: 14px; color: #4A596C; flex: 1 1 320px; min-width: 0">
+      <a href="LopHoc.dc.html" style="color: #4A596C; text-decoration: none">Kỹ thuật lập trình · KTLT-01</a>
+      <span aria-hidden="true">/</span>
+      <span>Tuần 7 · Con trỏ</span>
+      <span aria-hidden="true">/</span>
+      <span style="color: #182434; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis">Giáo trình Lập trình căn bản</span>
+    </nav>
+    <span style="font-size: 12px; color: #8A4B08; background: #FFF4E5; border: 1px solid #F0D3A8; padding: 3px 8px; border-radius: 4px">Dữ liệu minh họa</span>
+    <button type="button" style="display: flex; align-items: center; gap: 8px; height: 36px; padding: 0 10px 0 4px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; font: inherit; font-size: 14px; color: #182434; cursor: pointer">
+      <span aria-hidden="true" style="width: 28px; height: 28px; border-radius: 50%; background: #EAF2FB; color: #084887; display: grid; place-items: center; font-weight: 600; font-size: 12px">NH</span>
+      Nguyễn Văn Huy
+    </button>
+  </header>
+
+  <div class="work">
+
+    <aside class="outline" aria-label="Nội dung học phần" style="background: #FFFFFF; border-right: 1px solid #D9E0E8; padding: 16px 0; font-size: 14px">
+      <div style="padding: 0 16px 12px; display: flex; align-items: center; justify-content: space-between">
+        <span style="font-weight: 600">Nội dung học phần</span>
+        <button type="button" aria-label="Thu gọn mục lục" style="width: 32px; height: 32px; border: 0; background: transparent; border-radius: 6px; color: #4A596C; cursor: pointer">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>
+        </button>
+      </div>
+      <div style="display: flex; flex-direction: column">
+        <a href="LopHoc.dc.html" style="padding: 9px 16px; color: #4A596C; text-decoration: none">Tuần 5 · Chương trình con</a>
+        <a href="LopHoc.dc.html" style="padding: 9px 16px; color: #4A596C; text-decoration: none">Tuần 6 · Mảng</a>
+        <div style="padding: 9px 16px; font-weight: 600; color: #182434; background: #EAF2FB; border-right: 3px solid #0B5CAD">Tuần 7 · Con trỏ</div>
+        <div style="display: flex; flex-direction: column; padding: 4px 0 8px">
+          <a href="Main.dc.html" aria-current="page" style="display: flex; gap: 10px; padding: 8px 16px 8px 28px; color: #084887; text-decoration: none; font-weight: 500">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex: none; margin-top: 2px"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path></svg>
+            <span>Giáo trình Lập trình căn bản, ch. VII</span>
+          </a>
+          <a href="LopHoc.dc.html" style="display: flex; gap: 10px; padding: 8px 16px 8px 28px; color: #4A596C; text-decoration: none">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex: none; margin-top: 2px"><path d="M6 3h9l4 4v14H6z"></path><path d="M14 3v5h5"></path></svg>
+            <span>Slide bài giảng tuần 7</span>
+          </a>
+          <a href="LopHoc.dc.html" style="display: flex; gap: 10px; padding: 8px 16px 8px 28px; color: #4A596C; text-decoration: none">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex: none; margin-top: 2px"><path d="M4 5h16v14H4z"></path><path d="M8 10h8M8 14h5"></path></svg>
+            <span>Bài tập 3: Hoán đổi bằng con trỏ · hạn 20/11</span>
+          </a>
+          <a href="LopHoc.dc.html" style="display: flex; gap: 10px; padding: 8px 16px 8px 28px; color: #4A596C; text-decoration: none">
+            <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="8"></circle><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.7.3-1 .8-1 1.5M12 16.5v.01"></path></svg>
+            <span>Luyện tập: 6 câu đã duyệt</span>
+          </a>
+        </div>
+        <a href="LopHoc.dc.html" style="padding: 9px 16px; color: #4A596C; text-decoration: none">Tuần 8 · Chuỗi ký tự</a>
+        <a href="LopHoc.dc.html" style="padding: 9px 16px; color: #4A596C; text-decoration: none">Tuần 9 · Kiểu cấu trúc</a>
+      </div>
+    </aside>
+
+    <main aria-label="Tài liệu" style="min-width: 0; display: flex; flex-direction: column">
+      <div role="toolbar" aria-label="Điều khiển tài liệu" style="display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 10px 20px; border-bottom: 1px solid #D9E0E8; background: #FFFFFF; font-size: 14px">
+        <span style="font-weight: 600">Giáo trình Lập trình căn bản</span>
+        <span style="color: #4A596C">· phiên bản 2 · công bố 28/10</span>
+        <span style="flex: 1"></span>
+        <button type="button" aria-label="Trang trước" style="width: 36px; height: 36px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; color: #182434; cursor: pointer">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M15 6l-6 6 6 6"></path></svg>
+        </button>
+        <label for="page-input" style="color: #4A596C">Trang</label>
+        <input id="page-input" value="133" style="width: 52px; height: 36px; box-sizing: border-box; border: 1px solid #7C899A; border-radius: 6px; text-align: center; font: inherit; color: #182434">
+        <span style="color: #4A596C">/ 199</span>
+        <button type="button" aria-label="Trang sau" style="width: 36px; height: 36px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; color: #182434; cursor: pointer">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"></path></svg>
+        </button>
+        <span aria-hidden="true" style="width: 1px; height: 24px; background: #D9E0E8; margin: 0 4px"></span>
+        <button type="button" style="height: 36px; padding: 0 12px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; font: inherit; color: #182434; cursor: pointer">Vừa chiều rộng</button>
+        <button type="button" aria-label="Tìm trong tài liệu" style="width: 36px; height: 36px; border: 1px solid #D9E0E8; border-radius: 6px; background: #FFFFFF; color: #182434; cursor: pointer">
+          <svg aria-hidden="true" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="6"></circle><path d="M20 20l-4.5-4.5"></path></svg>
+        </button>
+      </div>
+
+      <div style="flex: 1; overflow: auto; padding: 28px 24px 40px; display: flex; justify-content: center">
+        <article aria-label="Trang 133" style="width: 100%; max-width: 720px; box-sizing: border-box; background: #FFFFFF; border: 1px solid #D9E0E8; box-shadow: 0 1px 2px rgba(24,36,52,0.06); padding: 56px 64px 48px; font-family: 'Source Serif 4', Georgia, serif; font-size: 17px; line-height: 1.65; color: #182434">
+          <p style="margin: 0 0 6px; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 13px; color: #4A596C">Chương VII. Kiểu con trỏ</p>
+          <h2 style="margin: 0 0 18px; font-size: 26px; line-height: 1.3; font-weight: 600; text-wrap: balance">7.2 Khai báo và sử dụng con trỏ</h2>
+          <p style="margin: 0 0 14px">Con trỏ là một biến dùng để lưu địa chỉ của một biến khác trong bộ nhớ. Khi khai báo, kiểu của con trỏ phải trùng với kiểu của biến mà nó sẽ trỏ tới, vì trình biên dịch dựa vào kiểu này để biết cần đọc bao nhiêu byte tại địa chỉ đó.</p>
+          <p style="margin: 0 0 14px">Toán tử <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 15px; background: #F1F4F8; padding: 1px 5px; border-radius: 4px">&amp;</code> trả về địa chỉ của một biến. <mark id="src-1" style="background: #FFE79A; color: #182434; padding: 2px 0; box-shadow: 0 0 0 2px #E8C34D">Toán tử <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 15px">*</code> đặt trước tên con trỏ cho phép truy cập giá trị đang nằm tại địa chỉ mà con trỏ giữ; gán qua <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 15px">*p</code> sẽ thay đổi chính biến được trỏ tới.</mark></p>
+          <pre aria-label="Ví dụ mã C" style="margin: 0 0 16px; padding: 16px 18px; background: #F1F4F8; border: 1px solid #D9E0E8; border-radius: 6px; font-family: 'JetBrains Mono', Consolas, monospace; font-size: 14px; line-height: 1.6; color: #182434; overflow-x: auto; white-space: pre">int a = 5;
+int *p = &amp;a;        /* p giữ địa chỉ của a      */
+*p = 10;             /* đổi a thông qua p        */
+printf("%d\n", a);   /* in ra 10                 */</pre>
+          <p style="margin: 0 0 14px">Một con trỏ chưa được gán địa chỉ hợp lệ không được phép giải tham chiếu. Nên khởi tạo con trỏ bằng <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 15px; background: #F1F4F8; padding: 1px 5px; border-radius: 4px">NULL</code> và kiểm tra trước khi dùng.</p>
+          <p style="margin: 28px 0 0; padding-top: 12px; border-top: 1px solid #D9E0E8; font-family: 'Be Vietnam Pro', system-ui, sans-serif; font-size: 12px; color: #4A596C; display: flex; justify-content: space-between">
+            <span>Giáo trình Lập trình căn bản · VOER · CC BY 3.0</span>
+            <span>Trang 133 · trang PDF 135/199</span>
+          </p>
+        </article>
+      </div>
+    </main>
+
+    <section class="tutor" aria-label="Trợ giảng" style="background: #FFFFFF; border-left: 1px solid #D9E0E8; display: flex; flex-direction: column; min-width: 0">
+      <div style="padding: 14px 18px 12px; border-bottom: 1px solid #D9E0E8; display: flex; flex-direction: column; gap: 10px">
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <h2 style="margin: 0; font-size: 16px; font-weight: 600">Trợ giảng</h2>
+          <div role="group" aria-label="Chế độ trả lời" style="display: flex; border: 1px solid #D9E0E8; border-radius: 6px; padding: 2px; background: #F3F5F8">
+            <button type="button" aria-pressed="true" style="height: 30px; padding: 0 12px; border: 0; border-radius: 4px; background: #FFFFFF; box-shadow: 0 0 0 1px #D9E0E8; font: inherit; font-size: 13px; font-weight: 600; color: #182434; cursor: pointer">Giải thích</button>
+            <button type="button" aria-pressed="false" style="height: 30px; padding: 0 12px; border: 0; border-radius: 4px; background: transparent; font: inherit; font-size: 13px; color: #4A596C; cursor: pointer">Gợi ý từng bước</button>
+          </div>
+        </div>
+        <p style="margin: 0; font-size: 13px; color: #4A596C">Trả lời từ học liệu đã công bố của lớp, ưu tiên tài liệu đang mở.</p>
+      </div>
+
+      <div style="flex: 1; overflow: auto; padding: 18px; display: flex; flex-direction: column; gap: 18px; font-size: 15px; line-height: 1.6">
+        <div style="align-self: flex-end; max-width: 88%; background: #EAF2FB; color: #182434; padding: 10px 14px; border-radius: 8px">Vì sao gán <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">*p = 10</code> lại làm thay đổi biến <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">a</code>?</div>
+
+        <div style="display: flex; flex-direction: column; gap: 10px">
+          <p style="margin: 0">Vì <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">p</code> đang giữ địa chỉ của <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">a</code>. Biểu thức <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">*p</code> không phải một biến mới mà là chính ô nhớ của <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">a</code>, nên gán vào <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">*p</code> là ghi đè giá trị của <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">a</code><a href="#src-1" style="font-size: 12px; font-weight: 600; text-decoration: none; background: #FFE79A; color: #182434; border-radius: 3px; padding: 0 4px; margin-left: 2px; vertical-align: 1px">1</a>.</p>
+          <p style="margin: 0">Điều này chỉ đúng khi <code style="font-family: 'JetBrains Mono', Consolas, monospace; font-size: 13.5px">p</code> đã được gán một địa chỉ hợp lệ; giải tham chiếu một con trỏ chưa khởi tạo là lỗi<a href="#src-1" style="font-size: 12px; font-weight: 600; text-decoration: none; background: #EAF2FB; color: #084887; border-radius: 3px; padding: 0 4px; margin-left: 2px; vertical-align: 1px">2</a>.</p>
+          <div style="display: flex; flex-direction: column; gap: 6px; padding-top: 4px">
+            <a href="#src-1" style="display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: baseline; padding: 8px 10px; border: 1px solid #E8C34D; background: #FFF5CC; border-radius: 6px; text-decoration: none; color: #182434; font-size: 13px">
+              <span style="font-weight: 700">1</span>
+              <span>Giáo trình Lập trình căn bản · 7.2</span>
+              <span style="color: #4A596C">tr. 133</span>
+            </a>
+            <a href="#src-1" style="display: grid; grid-template-columns: 22px 1fr auto; gap: 8px; align-items: baseline; padding: 8px 10px; border: 1px solid #D9E0E8; border-radius: 6px; text-decoration: none; color: #182434; font-size: 13px">
+              <span style="font-weight: 700; color: #084887">2</span>
+              <span>Giáo trình Lập trình căn bản · 7.2</span>
+              <span style="color: #4A596C">tr. 133</span>
+            </a>
+          </div>
+        </div>
+
+        <div style="align-self: flex-end; max-width: 88%; background: #EAF2FB; padding: 10px 14px; border-radius: 8px">Con trỏ hàm dùng để làm gì?</div>
+
+        <div role="status" style="display: flex; gap: 10px; padding: 12px 14px; background: #FFF4E5; border: 1px solid #F0D3A8; border-radius: 8px; color: #5C3205; font-size: 14px">
+          <svg aria-hidden="true" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" style="flex: none; margin-top: 2px"><circle cx="12" cy="12" r="9"></circle><path d="M12 8v5M12 16v.01"></path></svg>
+          <div>
+            <strong style="display: block; margin-bottom: 2px">Chưa đủ căn cứ trong học liệu của lớp</strong>
+            Các tài liệu đã công bố chưa có phần về con trỏ hàm. Bạn có thể hỏi giảng viên hoặc xem lại khi có tài liệu mới.
+          </div>
+        </div>
+      </div>
+
+      <form style="border-top: 1px solid #D9E0E8; padding: 12px 18px 16px; display: flex; flex-direction: column; gap: 8px">
+        <label for="ask" style="font-size: 13px; color: #4A596C">Hỏi về trang 133 hoặc cả học phần</label>
+        <textarea id="ask" rows="3" placeholder="Ví dụ: Cho mình một ví dụ dùng con trỏ để hoán đổi hai số" style="resize: none; box-sizing: border-box; width: 100%; border: 1px solid #7C899A; border-radius: 6px; padding: 10px 12px; font: inherit; font-size: 15px; color: #182434"></textarea>
+        <div style="display: flex; align-items: center; justify-content: space-between; gap: 8px">
+          <span style="font-size: 12px; color: #4A596C">Câu trả lời có thể sai; hãy mở nguồn để kiểm tra.</span>
+          <button type="submit" style="height: 40px; padding: 0 18px; border: 0; border-radius: 6px; background: #0B5CAD; color: #FFFFFF; font: inherit; font-weight: 600; cursor: pointer">Gửi câu hỏi</button>
+        </div>
+      </form>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {};
+  }
+}
+</script>
+</body>
+</html>
