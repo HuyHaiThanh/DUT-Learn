@@ -45,8 +45,8 @@ Mọi bảng có `id` (UUID v4, server sinh), `created_at`, `updated_at` (timest
 | class_members | class_id, user_id, role `lecturer|student` | unique(class_id, user_id) |
 | lessons | class_id, title, position, is_published | |
 | materials | class_id, lesson_id NULL, title, kind `pdf|text`, visibility `students|lecturers`, source_note, license_note, active_version_id NULL | active_version_id trỏ đến bản `published` duy nhất |
-| material_versions | material_id, version_no, status `uploaded|processing|ready|failed|published|superseded|revoked`, storage_key, checksum_sha256, page_count, quality_report JSONB, error, published_at/by, revoked_at/by | unique(material_id, version_no) |
-| chunks | version_id, ordinal, kind `text|code`, page_index (0-based), page_index_end, page_label, char_start, char_end, code_block_id NULL, part_no NULL, text, token_count, embedding vector(384) | index (version_id); chỉ tạo khi version thuộc material |
+| material_versions | material_id, version_no, status `uploaded|processing|ready|failed|published|superseded|revoked`, storage_key, checksum_sha256, original_filename, size_bytes, page_count, quality_report JSONB, error, processing_started_at, published_at/by, revoked_at/by, created_by | unique(material_id, version_no); unique một bản `published` mỗi material (partial index) |
+| chunks | version_id (ON DELETE CASCADE), ordinal (unique theo version), kind `text|code`, page_index (0-based), page_index_end, page_label, char_start, char_end, code_block_id NULL, part_no NULL, text, token_count, embedding vector(384) | index (version_id); chỉ tạo khi version thuộc material |
 | chat_sessions | user_id, class_id, lesson_id NULL, material_id NULL | |
 | chat_messages | session_id, role `user|assistant`, mode `answer|hint`, content, status `ok|insufficient_evidence|error`, error_code, retriever, model, prompt_version, latency_ms, request_id | |
 | citations | message_id, chunk_id, version_id, page_index, excerpt, ordinal | |

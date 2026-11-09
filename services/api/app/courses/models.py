@@ -27,6 +27,14 @@ class Class(Record, Base):
     content_version: Mapped[int] = mapped_column(server_default=text("0"))
 
 
+class Lesson(Record, Base):
+    __tablename__ = "lessons"
+    class_id: Mapped[UUID] = mapped_column(ForeignKey("classes.id"))
+    title: Mapped[str] = mapped_column(Text)
+    position: Mapped[int] = mapped_column(server_default=text("0"))
+    is_published: Mapped[bool] = mapped_column(server_default=text("false"))
+
+
 class ClassMember(Record, Base):
     __tablename__ = "class_members"
     __table_args__ = (
