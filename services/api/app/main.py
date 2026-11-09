@@ -17,10 +17,12 @@ from app.courses.router import router as courses_router
 from app.db import get_db
 from app.errors import error_response, http_error, validation_error
 from app.materials.router import router as materials_router
+from app.rag.llm import register_llm_errors
 
 app = FastAPI(title="DUTLearn API", version="0.1.0")
 app.add_exception_handler(HTTPException, http_error)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_error)  # type: ignore[arg-type]
+register_llm_errors(app)
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(courses_router)
