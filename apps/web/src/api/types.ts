@@ -18,3 +18,15 @@ export interface ClassSummary {
   term: string;
   status: 'open' | 'closed';
 }
+
+export interface Lesson {
+  id: string;
+  title: string;
+  position: number;
+  is_published: boolean;
+}
+export interface ClassDetail extends ClassSummary {
+  lessons: Lesson[];
+}
+export interface LessonCreate { title: string; position?: number }
+export interface LessonUpdate { title?: string; position?: number; is_published?: boolean }

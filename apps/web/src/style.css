@@ -196,6 +196,19 @@ input[aria-invalid="true"] { border: 2px solid var(--danger); }
 .admin-enroll fieldset { grid-template-columns: repeat(2, minmax(0, 1fr)); align-items: end; }
 .admin-enroll .metadata, .admin-enroll .form-error { margin-top: 12px; }
 .admin-member-group { margin-top: 24px; }
+.lesson-page { min-width: 0; overflow-wrap: anywhere; }
+.lesson-page > .page-heading { margin-top: 20px; }
+.lesson-list { list-style: none; padding: 0; margin: 0; }
+.lesson-row { display: flex; align-items: center; justify-content: space-between; gap: 20px; padding: 20px; }
+.lesson-row + .lesson-row { border-top: 1px solid var(--line); }
+.lesson-row h3 { margin: 0 0 8px; }
+.lesson-row p { margin: 8px 0 0; }
+.lesson-actions { display: flex; flex-wrap: wrap; gap: 8px; flex-shrink: 0; }
+.lesson-actions button { min-width: 44px; min-height: 44px; }
+@media (max-width: 768px) {
+  .lesson-row { flex-direction: column; align-items: stretch; padding: 16px; gap: 16px; }
+  .lesson-actions { flex-shrink: 1; }
+}
 @media (max-width: 600px) {
   .admin-dialog { width: calc(100vw - 16px); max-height: calc(100dvh - 16px); padding: 20px 16px; }
   .admin-enroll { padding: 16px; }
