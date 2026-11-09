@@ -16,6 +16,9 @@ class Settings(BaseSettings):
     llm_base_url: str = "http://127.0.0.1:11434"
     llm_model: str = "qwen2.5:7b-instruct"
     llm_timeout_s: float = 90
+    llm_num_ctx: int = Field(default=4096, gt=0)
+    llm_keep_alive: str = "30m"
+    llm_queue_wait_s: float = Field(default=30, gt=0)
     embed_model: str = "intfloat/multilingual-e5-small"
     retriever: Literal["dense", "hybrid"] = "dense"
     top_k: int = 5
