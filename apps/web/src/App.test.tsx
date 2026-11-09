@@ -12,6 +12,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
   return vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return response(me);
     if (path === '/api/classes') return response(classes);
+    if (path === '/api/classes/c1') return response({ ...classSummary, lessons: [] });
     if (path === '/api/admin/users') return response([]);
     if (path === '/api/auth/login') return response({});
     if (path === '/api/auth/logout') return new Response(null, { status: 204 });
@@ -151,7 +152,7 @@ it('429 làm tròn phút, chặn gửi lại và mở nút sau đếm ngược',
   expect(button).toBeEnabled();
   expect(screen.getByRole('alert')).toHaveTextContent('Bạn có thể thử đăng nhập lại.');
 });
-it('hàng lớp hiển thị tên môn, mã lớp, học kỳ và dẫn tới trang giữ chỗ', async () => {
+  it('hàng lớp hiển thị tên môn, mã lớp, học kỳ và dẫn tới trang lớp', async () => {
   const fetchMock = mockApi(student, [classSummary]);
   vi.stubGlobal('fetch', fetchMock); mount('/hoc');
   const row = await screen.findByRole('link', { name: /Kỹ thuật lập trình/ });
@@ -161,9 +162,9 @@ it('hàng lớp hiển thị tên môn, mã lớp, học kỳ và dẫn tới tr
   expect(screen.queryByText('Việc cần làm')).not.toBeInTheDocument();
   expect(screen.queryByText('Phản hồi mới')).not.toBeInTheDocument();
   fireEvent.click(row);
-  expect(await screen.findByRole('heading', { name: 'Trang lớp đang được xây dựng' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Kỹ thuật lập trình' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Quay lại danh sách lớp' })).toHaveAttribute('href', '/hoc');
-  expect(fetchMock.mock.calls.every(([path]) => path === '/api/auth/me' || path === '/api/classes')).toBe(true);
+  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/classes/c1'].includes(path))).toBe(true);
 });
 it('nút tài khoản có đúng họ tên hiển thị trong tên trợ năng và mở menu', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, full_name: 'Nguyễn Văn Huy' })); mount('/hoc');
