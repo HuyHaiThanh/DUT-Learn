@@ -16,6 +16,7 @@ from app.config import get_settings
 from app.courses.router import router as courses_router
 from app.db import get_db
 from app.errors import error_response, http_error, validation_error
+from app.materials.router import router as materials_router
 
 app = FastAPI(title="DUTLearn API", version="0.1.0")
 app.add_exception_handler(HTTPException, http_error)  # type: ignore[arg-type]
@@ -23,6 +24,7 @@ app.add_exception_handler(RequestValidationError, validation_error)  # type: ign
 app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(courses_router)
+app.include_router(materials_router)
 logger = logging.getLogger(__name__)
 
 
