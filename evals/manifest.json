@@ -1,0 +1,91 @@
+{
+  "corpus_id": "voer-ltcb",
+  "created": "2026-11-09",
+  "rule": "Split by chapter (topic). Every E-R/E-G question inherits the split of the chapter that holds its accepted pages; a question whose pages span both splits is not allowed. Page numbers are 1-based PDF pages (page_index + 1), not the printed footer.",
+  "dev": [
+    {
+      "chapter": "Phần I. Giới thiệu cấu trúc dữ liệu và giải thuật",
+      "pdf_pages": [
+        5,
+        20
+      ]
+    },
+    {
+      "chapter": "Chương I. Giới thiệu về ngôn ngữ C & môi trường Turbo C 3.0",
+      "pdf_pages": [
+        21,
+        29
+      ]
+    },
+    {
+      "chapter": "Chương III. Các câu lệnh đơn trong C",
+      "pdf_pages": [
+        48,
+        61
+      ]
+    },
+    {
+      "chapter": "Chương V. Chương trình con",
+      "pdf_pages": [
+        99,
+        115
+      ]
+    },
+    {
+      "chapter": "Chương VII. Kiểu con trỏ",
+      "pdf_pages": [
+        132,
+        150
+      ]
+    },
+    {
+      "chapter": "Chương IX. Kiểu cấu trúc",
+      "pdf_pages": [
+        163,
+        176
+      ]
+    }
+  ],
+  "test": [
+    {
+      "chapter": "Chương II. Các thành phần cơ bản trong C",
+      "pdf_pages": [
+        30,
+        47
+      ]
+    },
+    {
+      "chapter": "Chương IV. Các lệnh có cấu trúc",
+      "pdf_pages": [
+        62,
+        98
+      ]
+    },
+    {
+      "chapter": "Chương VI. Kiểu mảng",
+      "pdf_pages": [
+        116,
+        131
+      ]
+    },
+    {
+      "chapter": "Chương VIII. Chuỗi ký tự",
+      "pdf_pages": [
+        151,
+        162
+      ]
+    },
+    {
+      "chapter": "Chương X. Kiểu tập tin",
+      "pdf_pages": [
+        177,
+        194
+      ]
+    }
+  ],
+  "page_totals": {
+    "dev": 89,
+    "test": 101
+  },
+  "datasets_location": "data/evals/ (gitignored). Test questions never enter agent worktrees; the locked test set is hashed (SHA-256) before the first test run."
+}
