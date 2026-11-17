@@ -1,5 +1,7 @@
 import logging
-from collections.abc import Awaitable, Callable
+import os
+from collections.abc import AsyncIterator, Awaitable, Callable
+from contextlib import asynccontextmanager
 from uuid import uuid4
 
 import httpx
@@ -16,10 +18,24 @@ from app.config import get_settings
 from app.courses.router import router as courses_router
 from app.db import get_db
 from app.errors import error_response, http_error, validation_error
+from app.ingest.worker import IngestWorker
 from app.materials.router import router as materials_router
 from app.rag.llm import register_llm_errors
 
-app = FastAPI(title="DUTLearn API", version="0.1.0")
+
+@asynccontextmanager
+async def lifespan(app: FastAPI) -> AsyncIterator[None]:
+    worker = IngestWorker() if os.environ.get("DUT_INGEST_WORKER", "1") != "0" else None
+    if worker is not None:
+        worker.start()
+    try:
+        yield
+    finally:
+        if worker is not None:
+            worker.stop()
+
+
+app = FastAPI(title="DUTLearn API", version="0.1.0", lifespan=lifespan)
 app.add_exception_handler(HTTPException, http_error)  # type: ignore[arg-type]
 app.add_exception_handler(RequestValidationError, validation_error)  # type: ignore[arg-type]
 register_llm_errors(app)

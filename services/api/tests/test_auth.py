@@ -124,6 +124,9 @@ def test_session_rejected(db_client: TestClient, auth_db: Session, state: str):
     elif state == "inactive":
         auth_db.get(User, stored.user_id).is_active = False
     else:
+        # Replace (not add) the cookie: a second same-name cookie without a domain
+        # would be sent alongside the valid one and make the test order-dependent.
+        db_client.cookies.clear()
         db_client.cookies.set("dut_session", "invalid")
     auth_db.commit()
     response = db_client.get("/api/auth/me")

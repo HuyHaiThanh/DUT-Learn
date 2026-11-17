@@ -6,7 +6,7 @@ from uuid import UUID
 
 from fastapi import APIRouter, Depends, Form, HTTPException, UploadFile
 from fastapi.responses import StreamingResponse
-from sqlalchemy import select
+from sqlalchemy import select, update
 from sqlalchemy.orm import Session
 
 from app.auth.models import User
@@ -14,6 +14,7 @@ from app.courses.models import Class, Lesson
 from app.db import get_db
 from app.deps import class_role, require_class_lecturer, require_class_member, require_user
 from app.errors import APIError
+from app.ingest import queue
 from app.materials.models import Material, MaterialVersion, Visibility
 from app.materials.policy import can_read_version
 from app.materials.schemas import (
@@ -149,6 +150,30 @@ def version_status(
     version = find_version(db, version_id)
     lecturer_material(db, user, version.material_id)
     return VersionDetail.model_validate(version)
+
+
+@router.post("/material-versions/{version_id}/reprocess")
+def reprocess_version(
+    version_id: UUID,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+) -> VersionDetail:
+    version = find_version(db, version_id)
+    lecturer_material(db, user, version.material_id)
+    changed = db.scalar(
+        update(MaterialVersion)
+        .where(MaterialVersion.id == version_id, MaterialVersion.status == "failed")
+        .values(status="uploaded", error=None, processing_started_at=None)
+        .returning(MaterialVersion.id)
+    )
+    if changed is None:
+        db.rollback()
+        raise APIError(409, "invalid_state", "Chỉ có thể xử lý lại học liệu bị lỗi.")
+    db.commit()
+    db.refresh(version)
+    result = VersionDetail.model_validate(version)
+    queue.enqueue_ingest(version_id)
+    return result
 
 
 def stream_file(stream: BinaryIO) -> Iterator[bytes]:
