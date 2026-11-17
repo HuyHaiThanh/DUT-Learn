@@ -17,6 +17,10 @@ class Settings(BaseSettings):
     llm_model: str = "qwen2.5:7b-instruct"
     llm_timeout_s: float = 90
     llm_num_ctx: int = Field(default=4096, gt=0)
+    llm_max_tokens: int = Field(default=512, gt=0)
+    prompt_chars_per_token: float = Field(default=2.5, gt=0, allow_inf_nan=False)
+    prompt_template_overhead: int = Field(default=64, ge=0)
+    prompt_safety_margin: float = Field(default=0.15, ge=0, allow_inf_nan=False)
     llm_keep_alive: str = "30m"
     llm_queue_wait_s: float = Field(default=30, gt=0)
     embed_model: str = "intfloat/multilingual-e5-small"

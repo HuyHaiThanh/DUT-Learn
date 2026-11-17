@@ -21,6 +21,7 @@ from app.errors import error_response, http_error, validation_error
 from app.ingest.worker import IngestWorker
 from app.materials.router import router as materials_router
 from app.rag.llm import register_llm_errors
+from app.tutor.router import router as tutor_router
 
 
 @asynccontextmanager
@@ -43,6 +44,7 @@ app.include_router(auth_router)
 app.include_router(admin_router)
 app.include_router(courses_router)
 app.include_router(materials_router)
+app.include_router(tutor_router)
 logger = logging.getLogger(__name__)
 
 
