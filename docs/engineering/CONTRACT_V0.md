@@ -15,7 +15,7 @@ Trạng thái: v0.4 (16/11/2026: ngân sách ngữ cảnh prompt, kiểm lại m
 | Test | pytest (+ testcontainers hoặc DB compose riêng `dutlearn_test`), Vitest, Playwright | |
 | Lint | ruff + mypy (backend), eslint + tsc (frontend) | |
 
-Biến môi trường (`services/api/.env.example`): `DUT_DATABASE_URL`, `DUT_DATA_DIR` (mặc định `../../data`), `DUT_SESSION_TTL_HOURS=12`, `DUT_LLM_BASE_URL`, `DUT_LLM_MODEL`, `DUT_LLM_TIMEOUT_S=90`, `DUT_EMBED_MODEL`, `DUT_RETRIEVER=dense|hybrid`, `DUT_TOP_K=5`, `DUT_MIN_SCORE_DENSE`, `DUT_MIN_SCORE_HYBRID` (mặc định 0,0 đến khi T14c khóa), `DUT_PREFER_MATERIAL_BONUS=0.02`, `DUT_PREFER_PAGE_BONUS=0.01` (chỉ đổi thứ hạng, không đổi điểm cosine), `DUT_LLM_NUM_CTX=4096`, `DUT_LLM_MAX_TOKENS=512`, `DUT_PROMPT_CHARS_PER_TOKEN=2.0`, `DUT_PROMPT_TEMPLATE_OVERHEAD=64`, `DUT_PROMPT_SAFETY_MARGIN=0.15`, `HF_HOME` (đặt ở ổ D:).
+Biến môi trường (`services/api/.env.example`): `DUT_DATABASE_URL`, `DUT_DATA_DIR` (mặc định `../../data`), `DUT_SESSION_TTL_HOURS=12`, `DUT_LLM_BASE_URL`, `DUT_LLM_MODEL`, `DUT_LLM_TIMEOUT_S=90`, `DUT_EMBED_MODEL`, `DUT_RETRIEVER=dense|hybrid`, `DUT_TOP_K=5`, `DUT_MIN_SCORE_DENSE`, `DUT_MIN_SCORE_HYBRID` (mặc định 0,0 đến khi T14c khóa), `DUT_PREFER_MATERIAL_BONUS=0.02`, `DUT_PREFER_PAGE_BONUS=0.01` (chỉ đổi thứ hạng, không đổi điểm cosine), `DUT_LLM_NUM_CTX=4096`, `DUT_LLM_MAX_TOKENS=512`, `DUT_PROMPT_CHARS_PER_TOKEN=2.5` (hiệu chỉnh 17/11 bằng `prompt_eval_count` thật: tỷ lệ token thật/ước lượng ≤ 0,92), `DUT_PROMPT_TEMPLATE_OVERHEAD=64`, `DUT_PROMPT_SAFETY_MARGIN=0.15`, `HF_HOME` (đặt ở ổ D:).
 
 ## 2 Cấu trúc thư mục
 
@@ -139,7 +139,7 @@ Response 200:
  "limitation":"string|null","retriever":"dense","model":"qwen2.5:7b-instruct","latency_ms":4210,"request_id":"..."}
 ```
 
-Lỗi: 503 `llm_unavailable`, 504 `llm_timeout`, 429 `llm_busy` (hàng đợi đầy hoặc chờ > 30 s), 409 `source_changed` (nguồn bị thay/thu hồi trong lúc sinh), 500 `context_overflow` (một đoạn cũng không vừa ngân sách ngữ cảnh — lỗi cấu hình). Câu trả lời mô hình bắt đầu bằng `KHONG_DU_CAN_CU` được coi là "LLM tự báo thiếu căn cứ" → `status=insufficient_evidence`.
+Lỗi: 503 `llm_unavailable`, 504 `llm_timeout`, 429 `llm_busy` (hàng đợi đầy hoặc chờ > 30 s), 409 `source_changed` (nguồn bị thay/thu hồi trong lúc sinh), 500 `context_overflow` (một đoạn cũng không vừa ngân sách ngữ cảnh — lỗi cấu hình). Trích dẫn (T12b, `answer-v2`): chỉ xét ngoài khối ``` và `inline code`; chấp nhận `[1]`, `[1, 2]`, `[1-3]`, `[1][2]` và dạng mô hình hay viết `[n1]`, `[nguồn 1]`; `[…]` đứng ngay sau chữ cái ASCII, `_`, `]`, `)` là cú pháp mảng, giữ nguyên; số ngoài 1..m bị xóa. Câu trả lời mô hình bắt đầu bằng `KHONG_DU_CAN_CU` được coi là "LLM tự báo thiếu căn cứ" → `status=insufficient_evidence`.
 
 `LLMClient`: semaphore 1 request đang sinh, hàng đợi tối đa 3. Dev gọi `http://127.0.0.1:11434`; trong Compose gọi `http://host.docker.internal:11434` (kiểm chứng ở T04).
 
