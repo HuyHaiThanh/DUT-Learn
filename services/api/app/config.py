@@ -22,6 +22,11 @@ class Settings(BaseSettings):
     embed_model: str = "intfloat/multilingual-e5-small"
     retriever: Literal["dense", "hybrid"] = "dense"
     top_k: int = 5
+    # T14c locks calibrated scores on the dev set; zero is uncalibrated.
+    min_score_dense: float = 0.0
+    min_score_hybrid: float = 0.0
+    prefer_material_bonus: float = Field(default=0.02, ge=0, allow_inf_nan=False)
+    prefer_page_bonus: float = Field(default=0.01, ge=0, allow_inf_nan=False)
 
 
 @lru_cache

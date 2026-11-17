@@ -5,7 +5,7 @@ import math
 import threading
 from typing import Any, Protocol
 
-from app.config import get_settings
+from app.config import Settings, get_settings
 
 
 class Tokenizer(Protocol):
@@ -111,3 +111,7 @@ class E5Embedder:
 
     def embed_query(self, text: str) -> list[float]:
         return self._encode([text], "query: ")[0]
+
+
+def get_embedder(settings: Settings) -> Embedder:
+    return E5Embedder(settings.embed_model)
