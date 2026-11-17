@@ -5,6 +5,7 @@ import type { ClassRole, ClassSummary, Me } from '@/api/types';
 import { homePath, isUnauthorized } from '@/features/auth';
 import { Chevron } from '@/components/icons';
 import { LoginRedirect, RetryError } from '@/components/feedback';
+import { ContinueReadingSection } from '@/features/tutor/ReadingProgress';
 
 /** "2026-2027.1" → "Học kỳ 1, 2026–2027"; giữ nguyên nếu không đúng dạng. */
 export function formatTerm(term: string): string {
@@ -30,6 +31,7 @@ export function Classes({ role }: { role: ClassRole }) {
     <div className="page-heading"><h1>{role === 'student' ? `Chào ${givenName}` : 'Lớp phụ trách'}</h1>
       {terms.length > 0 && <p>{terms.map(formatTerm).join(' · ')}</p>}
     </div>
+    {role === 'student' && <ContinueReadingSection userId={me.id} />}
     <section aria-labelledby="classes-heading" aria-busy={classes.isFetching}>
       <h2 id="classes-heading" className="section-title">{role === 'student' ? 'Lớp đang học' : 'Lớp đang giảng dạy'}</h2>
       {classes.isPending ? <div className="state-panel" role="status">Đang tải danh sách lớp…</div> : classes.isError ? <RetryError homeTo={homePath(me)} retry={() => void classes.refetch()} /> : rows.length ? <div className="list-panel">{rows.map(c => <Link className="class-row" key={c.id} to={`/lop/${encodeURIComponent(c.id)}`}>

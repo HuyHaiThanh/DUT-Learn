@@ -14,6 +14,9 @@
 @import "@fontsource/jetbrains-mono/latin-400.css";
 @import "tailwindcss";
 
+/* JetBrains Mono turns "->", "<=", "!=" into arrows/symbols; students must see the exact C characters. */
+code, pre, kbd, samp { font-variant-ligatures: none; font-feature-settings: "liga" 0, "calt" 0; }
+
 :root {
   font-family: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;

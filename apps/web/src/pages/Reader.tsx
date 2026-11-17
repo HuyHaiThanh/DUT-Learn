@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Link, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/api/client';
 import { isUnauthorized } from '@/features/auth';
 import { LoginRedirect } from '@/components/feedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { TutorPanel } from '@/features/tutor/TutorPanel';
+import { readerContext } from '@/features/tutor/api';
+import { useReadingPosition } from '@/features/tutor/ReadingProgress';
 
 type PageText = { page_index: number; page_label: string; text: string; chunks: { id: string; ordinal: number; kind: string; char_start: number; char_end: number }[] };
 type ReaderPage = PageText & { count: number; kind: string };
@@ -77,8 +80,9 @@ function PdfPage({ versionId, page, zoom, onError }: { versionId: string; page: 
 }
 
 /** T13 supplies the side panel and the mobile tab; no visible empty slot in T10. */
-export function ReaderLayout({ children, assistant }: { children: ReactNode; assistant?: ReactNode }) {
+export function ReaderLayout({ children, assistant, citationLocation }: { children: ReactNode; assistant?: ReactNode; citationLocation?: string }) {
   const [tab, setTab] = useState<'document' | 'assistant'>('document');
+  useEffect(() => { if (citationLocation) setTab('document'); }, [citationLocation]);
   return <div className={`reader-layout${assistant ? ' has-assistant' : ''}`}>
     {assistant && <div className="reader-mobile-tabs" role="tablist" aria-label="Chế độ xem"><button role="tab" aria-selected={tab === 'document'} onClick={() => setTab('document')}>Tài liệu</button><button role="tab" aria-selected={tab === 'assistant'} onClick={() => setTab('assistant')}>Trợ giảng</button></div>}
     <div className="reader-document" data-mobile-hidden={tab !== 'document'}>{children}</div>
@@ -88,6 +92,7 @@ export function ReaderLayout({ children, assistant }: { children: ReactNode; ass
 
 export function Reader() {
   const { versionId = '' } = useParams();
+  const location = useLocation();
   const [params, setParams] = useSearchParams();
   const requested = Number(params.get('page') ?? 1);
   const page = Number.isSafeInteger(requested) && requested > 0 ? requested : 1;
@@ -95,9 +100,12 @@ export function Reader() {
   const [pdfError, setPdfError] = useState<Error | null>(null);
   const query = useQuery({ queryKey: ['reader', versionId, page], queryFn: ({ signal }) => loadPage(versionId, page, signal), retry: false, gcTime: 0, staleTime: 0 });
   const error = query.error ?? pdfError;
+  const context = useQuery({ queryKey: ['reader-context', versionId], queryFn: ({ signal }) => readerContext(versionId, signal), retry: false, gcTime: 0 });
+  const positionError = useReadingPosition(context.data, versionId, page - 1, !!query.data && !error && !query.isFetching);
   // Keep the last known page count while the next page loads, so navigation and the "/ N" label do not reset.
-  const [knownCount, setKnownCount] = useState(0);
-  useEffect(() => { if (query.data) setKnownCount(query.data.count); }, [query.data]);
+  const [knownPage, setKnownPage] = useState({ versionId: '', count: 0 });
+  const knownCount = knownPage.versionId === versionId ? knownPage.count : 0;
+  useEffect(() => { if (query.data) setKnownPage({ versionId, count: query.data.count }); }, [query.data, versionId]);
   const count = query.data?.count ?? knownCount;
   function navigate(next: number) {
     if (next < 1 || next > count || next === page) return;
@@ -119,9 +127,9 @@ export function Reader() {
     window.addEventListener('keydown', keydown);
     return () => window.removeEventListener('keydown', keydown);
   }, [count, page, params, setParams, error]);
-  if (isUnauthorized(error)) return <LoginRedirect />;
+  if (isUnauthorized(error) || isUnauthorized(context.error) || isUnauthorized(positionError)) return <LoginRedirect />;
   if (error) return <div className="state-panel"><p role="alert">{error instanceof ApiError && [403, 404, 410].includes(error.status) ? 'Tài liệu không tồn tại hoặc đã bị thu hồi.' : 'Không thể tải tài liệu. Vui lòng thử lại.'}</p><Button onClick={() => { setPdfError(null); void query.refetch(); }}>Thử lại</Button><Link to="/">Về danh sách lớp</Link></div>;
-  if (query.isPending || !query.data) return <p role="status">Đang tải tài liệu…</p>;
+  if (query.isPending && knownCount === 0) return <p role="status">Đang tải tài liệu…</p>;
   const data = query.data;
   return <div className="reader-page"><Link to="/">Về danh sách lớp</Link><h1>Trình đọc học liệu</h1>
     <div className="reader-toolbar" aria-label="Điều khiển tài liệu">
@@ -130,9 +138,13 @@ export function Reader() {
       <Button variant="outline" disabled={page >= count} onClick={() => navigate(page + 1)}>Trang sau</Button>
       <div className="reader-zoom"><Button variant="outline" aria-label="Thu nhỏ" disabled={zoom <= 0.5} onClick={() => setZoom(z => Math.max(0.5, z - 0.25))}>−</Button><output aria-label="Mức phóng to">{Math.round(zoom * 100)}%</output><Button variant="outline" aria-label="Phóng to" disabled={zoom >= 2} onClick={() => setZoom(z => Math.min(2, z + 0.25))}>+</Button></div>
     </div>
-    <ReaderLayout>
-      {data.kind === 'pdf' && <PdfPage key={versionId} versionId={versionId} page={page} zoom={zoom} onError={setPdfError} />}
-      <section className="reader-text-panel" aria-label={data.kind === 'pdf' ? 'Đoạn được trích' : 'Văn bản trang'}>{data.kind === 'pdf' && <h2>Đoạn được trích</h2>}<p className="metadata">Trang {data.page_label}</p><pre className="reader-text" style={{ fontSize: `${18 * (data.kind === 'pdf' ? 1 : zoom)}px` }}><HighlightedText text={data.text} highlight={params.get('hl')} /></pre></section>
+    {data && context.isError && <p role="alert">Không tải được ngữ cảnh trợ giảng. <Button variant="outline" onClick={() => void context.refetch()}>Thử lại trợ giảng</Button></p>}
+    {positionError != null && !isUnauthorized(positionError) && <p role="status">Chưa lưu được vị trí đọc gần nhất.</p>}
+    <ReaderLayout citationLocation={params.has('hl') ? location.key : undefined} assistant={context.data && (data || knownCount > 0) ? <TutorPanel key={context.data.material_id} context={context.data} pageIndex={page - 1} /> : undefined}>
+      {!data ? <p role="status">Đang tải tài liệu…</p> : <>
+        {data.kind === 'pdf' && <PdfPage key={versionId} versionId={versionId} page={page} zoom={zoom} onError={setPdfError} />}
+        <section className="reader-text-panel" aria-label={data.kind === 'pdf' ? 'Đoạn được trích' : 'Văn bản trang'}>{data.kind === 'pdf' && <h2>Đoạn được trích</h2>}<p className="metadata">Trang {data.page_label}</p><pre className="reader-text" style={{ fontSize: `${18 * (data.kind === 'pdf' ? 1 : zoom)}px` }}><HighlightedText text={data.text} highlight={params.get('hl')} /></pre></section>
+      </>}
     </ReaderLayout>
   </div>;
 }
