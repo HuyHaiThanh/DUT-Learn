@@ -4,16 +4,18 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
 import { App } from '@/App';
 import type { ClassDetail, Lesson, Me } from '@/api/types';
+import type { Material } from '@/features/materials';
 
 const published: Lesson = { id: 'l1', title: 'Mảng một chiều', position: 2, is_published: true };
 const draft: Lesson = { id: 'l2', title: 'Con trỏ', position: 2, is_published: false };
 const classroom: ClassDetail = { id: 'c1', course_id: 'course', course_code: 'KTLT', course_name: 'Kỹ thuật lập trình', role: 'student', code: 'KTLT-01', term: '2026-2027.1', status: 'open', content_version: 0, lessons: [published] };
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-function setup(options: { lecturer?: boolean; lessons?: Lesson[]; status?: number; write?: (path: string, init: RequestInit) => Response | Promise<Response>; read?: () => Promise<Response> } = {}) {
+function setup(options: { lecturer?: boolean; lessons?: Lesson[]; materials?: Material[]; status?: number; write?: (path: string, init: RequestInit) => Response | Promise<Response>; read?: () => Promise<Response> } = {}) {
   const role = options.lecturer ? 'lecturer' : 'student';
   const me: Me = { id: 'u1', email: 'u@example.test', full_name: 'Nguyễn An', system_role: 'user', classes: [{ class_id: 'c1', role }] };
   const mock = vi.fn(async (path: string, init: RequestInit = {}) => {
     if (path === '/api/auth/me') return response(me);
+    if (path === '/api/classes/c1/materials') return response(options.materials ?? []);
     if (path === '/api/classes/c1' && !init?.method) return options.read?.() ?? (options.status ? response({ error: { message: 'Lỗi tải lớp' } }, options.status) : response({ ...classroom, role, lessons: options.lessons ?? classroom.lessons }));
     if (init?.method) return options.write?.(path, init) ?? response(published);
     throw new Error(`Unexpected ${path}`);
@@ -24,6 +26,17 @@ function setup(options: { lecturer?: boolean; lessons?: Lesson[]; status?: numbe
   return { mock, client };
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it('SV thấy học liệu theo bài và học liệu chung, liên kết tới đúng bản công bố', async () => {
+  setup({ materials: [
+    { id: 'm1', title: 'Giáo trình mảng', lesson_id: 'l1', kind: 'pdf', active_version_id: 'v1', page_count: 12 },
+    { id: 'm2', title: 'Tài liệu tham khảo', lesson_id: null, kind: 'text', active_version_id: 'v2', page_count: 2 },
+  ] });
+  expect(await screen.findByRole('link', { name: /Giáo trình mảng/ })).toHaveAttribute('href', '/doc/v1?page=1');
+  expect(screen.getByRole('link', { name: /Tài liệu tham khảo/ })).toHaveAttribute('href', '/doc/v2?page=1');
+  expect(screen.getByRole('heading', { name: 'Học liệu chung của lớp' })).toBeInTheDocument();
+  expect(screen.queryByText('Chưa có học liệu')).not.toBeInTheDocument();
+});
 
 it('SV chỉ thấy bài công bố, chưa có học liệu và link về đúng vai trò', async () => {
   setup({ lessons: [published, draft] });

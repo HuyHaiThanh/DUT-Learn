@@ -10,6 +10,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { formatTerm } from './Classes';
+import { LecturerMaterials, MaterialError, MaterialLinks, useMaterials } from '@/features/materials';
 
 function LessonError({ error, id }: { error: Error | null; id?: string }) {
   if (!error) return null;
@@ -58,6 +59,7 @@ export function ClassPage() {
   const me = useOutletContext<Me>();
   const client = useQueryClient();
   const classroom = useQuery({ queryKey: ['class', classId], queryFn: () => apiFetch<ClassDetail>(`/classes/${classId}`), retry: false });
+  const materials = useMaterials(classId);
   const move = useMutation({
     mutationFn: async ({ lessons, index, step }: { lessons: Lesson[]; index: number; step: number }) => {
       const ordered = [...lessons];
@@ -84,13 +86,17 @@ export function ClassPage() {
     <section aria-labelledby="lessons-heading" aria-busy={classroom.isFetching || move.isPending}>
       <div className="admin-heading"><h2 id="lessons-heading" className="section-title">Bài học</h2>{lecturer && <TitleDialog classId={classId} disabled={move.isPending} />}</div>
       <LessonError error={move.error} />
+      <MaterialError error={materials.error} />
+      {materials.isError && <Button variant="outline" onClick={() => void materials.refetch()}>Thử tải lại học liệu</Button>}
       {lessons.length ? <ul className="list-panel lesson-list">{lessons.map((lesson, index) => <li className="lesson-row" key={lesson.id}>
-        <div className="class-copy"><h3 className="row-title">{lesson.title}</h3>{lecturer && <span className={`admin-badge${lesson.is_published ? ' success' : ''}`}>{lesson.is_published ? 'Đã công bố' : 'Nháp'}</span>}<p className="metadata">Chưa có học liệu</p></div>
+        <div className="class-copy"><h3 className="row-title">{lesson.title}</h3>{lecturer && <span className={`admin-badge${lesson.is_published ? ' success' : ''}`}>{lesson.is_published ? 'Đã công bố' : 'Nháp'}</span>}{materials.isPending ? <p role="status">Đang tải học liệu…</p> : materials.data && <MaterialLinks materials={materials.data.filter(m => m.lesson_id === lesson.id && m.active_version_id)} />}</div>
         {lecturer && <div className="lesson-actions">
           <TitleDialog classId={classId} lesson={lesson} disabled={move.isPending} /><PublishDialog classId={classId} lesson={lesson} disabled={move.isPending} />
           {([-1, 1] as const).map(step => <Button key={step} variant="outline" disabled={move.isPending || (step === -1 ? index === 0 : index === lessons.length - 1)} aria-label={`${step === -1 ? 'Đưa lên' : 'Đưa xuống'}: ${lesson.title}`} onClick={() => { if (!move.isPending) move.mutate({ lessons, index, step }); }}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={step === -1 ? 'm6 14 6-6 6 6' : 'm6 10 6 6 6-6'} /></svg></Button>)}
         </div>}
       </li>)}</ul> : <div className="state-panel">{lecturer ? 'Chưa có bài học. Chọn “Thêm bài học” để bắt đầu.' : 'Giảng viên chưa công bố bài học nào.'}</div>}
     </section>
+    {!lecturer && !!materials.data?.some(m => m.lesson_id === null) && <section aria-label="Học liệu chung của lớp"><h2 className="section-title">Học liệu chung của lớp</h2><MaterialLinks materials={materials.data.filter(m => m.lesson_id === null)} /></section>}
+    {lecturer && <LecturerMaterials classId={classId} lessons={lessons} />}
   </div>;
 }

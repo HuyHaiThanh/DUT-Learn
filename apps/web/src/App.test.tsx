@@ -13,6 +13,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
     if (path === '/api/auth/me') return response(me);
     if (path === '/api/classes') return response(classes);
     if (path === '/api/classes/c1') return response({ ...classSummary, lessons: [] });
+    if (path === '/api/classes/c1/materials') return response([]);
     if (path === '/api/admin/users') return response([]);
     if (path === '/api/auth/login') return response({});
     if (path === '/api/auth/logout') return new Response(null, { status: 204 });
@@ -164,7 +165,7 @@ it('429 làm tròn phút, chặn gửi lại và mở nút sau đếm ngược',
   fireEvent.click(row);
   expect(await screen.findByRole('heading', { name: 'Kỹ thuật lập trình' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Quay lại danh sách lớp' })).toHaveAttribute('href', '/hoc');
-  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/classes/c1'].includes(path))).toBe(true);
+  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/classes/c1', '/api/classes/c1/materials'].includes(path))).toBe(true);
 });
 it('nút tài khoản có đúng họ tên hiển thị trong tên trợ năng và mở menu', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, full_name: 'Nguyễn Văn Huy' })); mount('/hoc');
