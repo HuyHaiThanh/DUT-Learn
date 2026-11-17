@@ -104,7 +104,7 @@ Lỗi chung: `{"error": {"code": "string_snake", "message": "tiếng Việt", "r
 | PATCH | /materials/{id} | lecturer | đổi title/visibility/lesson; đổi visibility tăng content_version |
 | POST | /material-versions/{id}/reprocess | lecturer | từ `failed` |
 | GET | /material-versions/{id}/file | member có quyền | stream PDF, `Cache-Control: private, no-store` |
-| GET | /material-versions/{id}/pages/{page}/text | member có quyền | cho đánh dấu đoạn |
+| GET | /material-versions/{id}/pages/{page}/text | member có quyền | cho đánh dấu đoạn. `page` = page_index **0-based**; trả `{page_index, page_label, text, chunks:[{id, ordinal, kind, char_start, char_end}]}` + header `X-Page-Count`, `X-Material-Kind`. URL trình đọc phía web dùng `?page=` **1-based** và `&hl=START-END` (T10) |
 | POST | /tutor/ask | member | xem 5.1 |
 | GET | /tutor/sessions?class_id= , /tutor/sessions/{id}/messages | owner | |
 | GET | /citations/{id}/open | owner + còn quyền | `{version_id,page_index,excerpt,char_start,char_end}` hoặc 410 `source_revoked` |
