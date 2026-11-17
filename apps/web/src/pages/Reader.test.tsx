@@ -6,7 +6,7 @@ import { HighlightedText, Reader } from './Reader';
 
 function Location() { return <output data-testid="location">{useLocation().search}</output>; }
 function setup(entry = '/doc/v1?page=1', fail?: number) {
-  const mock = vi.fn(async () => new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text: 'A😀 Nội dung trang', chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } }));
+  const mock = vi.fn(async (path: string) => path === '/api/classes' ? new Response('[]') : new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text: 'A😀 Nội dung trang', chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } }));
   vi.stubGlobal('fetch', mock);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><Location /><Routes><Route path="/doc/:versionId" element={<Reader />} /></Routes></MemoryRouter></QueryClientProvider>);
@@ -14,7 +14,7 @@ function setup(entry = '/doc/v1?page=1', fail?: number) {
 }
 afterEach(() => vi.unstubAllGlobals());
 
-it('đọc trang từ URL, tô sáng theo code point và không hiện khung trợ giảng', async () => {
+it('đọc trang từ URL, tô sáng theo code point và không hiện trợ giảng khi chưa có ngữ cảnh', async () => {
   const { mock } = setup('/doc/v1?page=2&hl=3-6');
   expect(await screen.findByLabelText('Trang')).toHaveValue(2);
   expect(document.querySelector('mark')).toHaveTextContent('Nội');

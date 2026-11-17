@@ -12,6 +12,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
   return vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return response(me);
     if (path === '/api/classes') return response(classes);
+    if (path === '/api/me/continue') return response(null);
     if (path === '/api/classes/c1') return response({ ...classSummary, lessons: [] });
     if (path === '/api/classes/c1/materials') return response([]);
     if (path === '/api/admin/users') return response([]);
@@ -68,18 +69,23 @@ it('lọc đúng lớp, vai trò và trạng thái sinh viên', async () => {
   expect(screen.queryByText('ĐÃ ĐÓNG')).not.toBeInTheDocument();
 });
 it('lỗi mạng và thử lại danh sách lớp', async () => {
-  const fetchMock = mockApi();
-  fetchMock.mockImplementationOnce(async () => response(student));
-  fetchMock.mockRejectedValueOnce(new TypeError('offline'));
+  const normalApi = mockApi();
+  let classAttempts = 0;
+  const fetchMock = vi.fn(async (path: string) => {
+    if (path === '/api/classes' && classAttempts++ === 0) throw new TypeError('offline');
+    return normalApi(path);
+  });
   vi.stubGlobal('fetch', fetchMock); mount('/hoc');
   expect(await screen.findByRole('alert')).toHaveTextContent('Không thể kết nối');
   fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
   await screen.findByText('Bạn chưa được ghi danh lớp nào');
+  expect(classAttempts).toBe(2);
 });
 it('401 khi tải danh sách lớp chuyển về login', async () => {
-  const fetchMock = mockApi();
-  fetchMock.mockImplementationOnce(async () => response(student));
-  fetchMock.mockResolvedValueOnce(response({ error: { code: 'unauthorized' } }, 401));
+  const normalApi = mockApi();
+  const fetchMock = vi.fn(async (path: string) => path === '/api/classes'
+    ? response({ error: { code: 'unauthorized' } }, 401)
+    : normalApi(path));
   vi.stubGlobal('fetch', fetchMock); mount('/hoc');
   expect(await screen.findByRole('button', { name: 'Đăng nhập' })).toBeInTheDocument();
 });
@@ -165,7 +171,7 @@ it('429 làm tròn phút, chặn gửi lại và mở nút sau đếm ngược',
   fireEvent.click(row);
   expect(await screen.findByRole('heading', { name: 'Kỹ thuật lập trình' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Quay lại danh sách lớp' })).toHaveAttribute('href', '/hoc');
-  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/classes/c1', '/api/classes/c1/materials'].includes(path))).toBe(true);
+  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/me/continue', '/api/classes/c1', '/api/classes/c1/materials'].includes(path))).toBe(true);
 });
 it('nút tài khoản có đúng họ tên hiển thị trong tên trợ năng và mở menu', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, full_name: 'Nguyễn Văn Huy' })); mount('/hoc');
