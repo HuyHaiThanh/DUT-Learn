@@ -1,0 +1,3 @@
+deploy/hf-space/Dockerfile text eol=lf
+deploy/hf-space/*.py text eol=lf
+deploy/hf-space/*.md text eol=lf
