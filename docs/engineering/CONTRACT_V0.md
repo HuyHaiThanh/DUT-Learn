@@ -17,6 +17,8 @@ Trạng thái: v0.4 (16/11/2026: ngân sách ngữ cảnh prompt, kiểm lại m
 
 Biến môi trường (`services/api/.env.example`): `DUT_DATABASE_URL`, `DUT_DATA_DIR` (mặc định `../../data`), `DUT_SESSION_TTL_HOURS=12`, `DUT_LLM_BASE_URL`, `DUT_LLM_MODEL`, `DUT_LLM_TIMEOUT_S=90`, `DUT_EMBED_MODEL`, `DUT_RETRIEVER=dense|hybrid`, `DUT_TOP_K=5`, `DUT_MIN_SCORE_DENSE`, `DUT_MIN_SCORE_HYBRID` (mặc định 0,0 đến khi T14c khóa), `DUT_PREFER_MATERIAL_BONUS=0.02`, `DUT_PREFER_PAGE_BONUS=0.01` (chỉ đổi thứ hạng, không đổi điểm cosine), `DUT_LLM_NUM_CTX=4096`, `DUT_LLM_MAX_TOKENS=512`, `DUT_PROMPT_CHARS_PER_TOKEN=2.5` (hiệu chỉnh 17/11 bằng `prompt_eval_count` thật: tỷ lệ token thật/ước lượng ≤ 0,92), `DUT_PROMPT_TEMPLATE_OVERHEAD=64`, `DUT_PROMPT_SAFETY_MARGIN=0.15`, `HF_HOME` (đặt ở ổ D:).
 
+**Nhà cung cấp LLM (T15d, chỉ cho bản demo trực tuyến).** `DUT_LLM_PROVIDER=ollama|openai` (mặc định `ollama`). `openai` = API chat tương thích OpenAI (`POST {DUT_LLM_BASE_URL}/chat/completions`, khóa `DUT_LLM_API_KEY`, không bao giờ ghi log), dùng chung hàng đợi 1 slot, timeout và mã lỗi với Ollama; HTTP 429 của nhà cung cấp → 429 `llm_busy`; khối `<think>…</think>` bị bỏ trước khi phân tích citation. **Mọi thực nghiệm và số liệu trong quyển dùng `ollama` + Qwen2.5-7B**; bản demo trực tuyến phải ghi rõ mô hình đang dùng. `DUT_COOKIE_SECURE=true` bắt buộc khi phục vụ qua HTTPS công khai. Đóng gói demo: `deploy/hf-space/` (xem `docs/engineering/DEPLOY_DEMO.md`).
+
 ## 2 Cấu trúc thư mục
 
 ```text

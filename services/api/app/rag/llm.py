@@ -3,6 +3,7 @@
 import argparse
 import logging
 import math
+import re
 import threading
 from collections import deque
 from collections.abc import Iterator
@@ -150,6 +151,24 @@ class OllamaClient:
             self._active = False
             self._condition.notify_all()
 
+    chat_path = "api/chat"
+
+    def _payload(
+        self, messages: list[ChatMessage], temperature: float, seed: int, max_tokens: int
+    ) -> dict[str, Any]:
+        return {
+            "model": self.settings.llm_model,
+            "messages": messages,
+            "stream": False,
+            "options": {
+                "temperature": temperature,
+                "seed": seed,
+                "num_predict": max_tokens,
+                "num_ctx": self.settings.llm_num_ctx,
+            },
+            "keep_alive": self.settings.llm_keep_alive,
+        }
+
     def _chat_request(self, payload: dict[str, Any]) -> httpx.Response:
         """Bound caller wall time, including a server trickling response bytes.
 
@@ -161,7 +180,7 @@ class OllamaClient:
 
         def send() -> None:
             try:
-                response = self._request("POST", "api/chat", json=payload)
+                response = self._request("POST", self.chat_path, json=payload)
             except BaseException as exc:
                 future.set_exception(exc)
             else:
@@ -199,18 +218,7 @@ class OllamaClient:
         try:
             with self._slot() as queue_ms:
                 response = self._chat_request(
-                    {
-                        "model": self.settings.llm_model,
-                        "messages": messages,
-                        "stream": False,
-                        "options": {
-                            "temperature": temperature,
-                            "seed": seed,
-                            "num_predict": max_tokens,
-                            "num_ctx": self.settings.llm_num_ctx,
-                        },
-                        "keep_alive": self.settings.llm_keep_alive,
-                    },
+                    self._payload(messages, temperature, seed, max_tokens)
                 )
                 result = self._parse(response, queue_ms)
             logger.info(
@@ -290,9 +298,112 @@ class OllamaClient:
             raise LLMUnavailable() from None
 
 
+_THINK_BLOCK = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
+
+
+class OpenAICompatClient(OllamaClient):
+    """OpenAI-compatible chat API (e.g. Groq), for the hosted demo only.
+
+    Reuses the single-slot queue and wall-clock timeout of OllamaClient. Experiments
+    keep using Ollama; this client exists so the demo can run without a GPU.
+    """
+
+    chat_path = "chat/completions"
+
+    def __init__(
+        self, settings: Settings | None = None, *, transport: httpx.BaseTransport | None = None
+    ) -> None:
+        super().__init__(settings, transport=transport)
+        key = self.settings.llm_api_key
+        if key is None or not key.get_secret_value():
+            raise ValueError("llm_api_key is required for the openai provider")
+        self._http.headers["Authorization"] = f"Bearer {key.get_secret_value()}"
+
+    def _payload(
+        self, messages: list[ChatMessage], temperature: float, seed: int, max_tokens: int
+    ) -> dict[str, Any]:
+        return {
+            "model": self.settings.llm_model,
+            "messages": messages,
+            "stream": False,
+            "temperature": temperature,
+            "seed": seed,
+            "max_tokens": max_tokens,
+        }
+
+    def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
+        started = perf_counter()
+        try:
+            response = self._http.request(method, path, **kwargs)
+        except httpx.TimeoutException:
+            raise LLMTimeout() from None
+        except httpx.HTTPError:
+            raise LLMUnavailable() from None
+        if perf_counter() - started >= self.settings.llm_timeout_s:
+            raise LLMTimeout()
+        if response.status_code == 429:  # provider rate limit (free tiers)
+            raise LLMBusy()
+        if not response.is_success:
+            raise LLMUnavailable()
+        return response
+
+    @staticmethod
+    def _parse(response: httpx.Response, queue_ms: float) -> LLMResult:
+        try:
+            data = response.json()
+            choice = data["choices"][0]
+            message = choice["message"]
+            if (
+                not isinstance(data.get("model"), str)
+                or not data["model"]
+                or message.get("role") != "assistant"
+                or not isinstance(message.get("content"), str)
+            ):
+                raise ValueError
+            usage = data.get("usage") or {}
+            prompt_tokens = usage.get("prompt_tokens", 0)
+            completion_tokens = usage.get("completion_tokens", 0)
+            for value in (prompt_tokens, completion_tokens):
+                if type(value) is not int or value < 0:
+                    raise ValueError
+            # Reasoning models may prepend a hidden-thought block; never show it.
+            text = _THINK_BLOCK.sub("", message["content"]).strip()
+            try:
+                elapsed_ms = response.elapsed.total_seconds() * 1000
+            except RuntimeError:  # response not closed (test transports)
+                elapsed_ms = 0.0
+            return LLMResult(
+                text=text,
+                model=data["model"],
+                prompt_tokens=prompt_tokens,
+                completion_tokens=completion_tokens,
+                load_ms=0.0,
+                generate_ms=elapsed_ms,
+                total_ms=elapsed_ms,
+                queue_wait_ms=queue_ms,
+            )
+        except (ValueError, KeyError, TypeError, IndexError, AttributeError):
+            raise LLMUnavailable() from None
+
+    def ping(self) -> None:
+        try:
+            models = self._request("GET", "models").json()
+            if not any(item["id"] == self.settings.llm_model for item in models["data"]):
+                raise ValueError
+        except (ValueError, KeyError, TypeError):
+            raise LLMUnavailable() from None
+
+
+def build_llm_client(settings: Settings | None = None) -> OllamaClient:
+    provider = (settings if settings is not None else get_settings()).llm_provider
+    if provider == "openai":
+        return OpenAICompatClient(settings)
+    return OllamaClient(settings) if settings is not None else OllamaClient()
+
+
 @lru_cache(maxsize=1)
 def _cached_llm_client() -> OllamaClient:
-    return OllamaClient()
+    return build_llm_client()
 
 
 _client_lock = threading.Lock()
