@@ -12,7 +12,7 @@ from concurrent.futures import TimeoutError as FutureTimeout
 from contextlib import contextmanager
 from dataclasses import dataclass
 from functools import lru_cache
-from time import perf_counter
+from time import perf_counter, sleep
 from typing import Any, Literal, Protocol, TypedDict
 from uuid import uuid4
 
@@ -301,6 +301,17 @@ class OllamaClient:
 _THINK_BLOCK = re.compile(r"<think>.*?</think>\s*", re.DOTALL)
 
 
+def _retry_after_seconds(response: httpx.Response) -> float | None:
+    value = response.headers.get("retry-after")
+    if value is None:
+        return None
+    try:
+        seconds = float(value)
+    except ValueError:
+        return None
+    return seconds if seconds >= 0 else None
+
+
 class OpenAICompatClient(OllamaClient):
     """OpenAI-compatible chat API (e.g. Groq), for the hosted demo only.
 
@@ -331,18 +342,37 @@ class OpenAICompatClient(OllamaClient):
             "max_tokens": max_tokens,
         }
 
+    # Free tiers limit tokens per minute; wait out a short Retry-After instead of
+    # failing the question, as long as the wall-clock budget allows it.
+    max_rate_limit_retries = 2
+    max_retry_after_s = 20.0
+
     def _request(self, method: str, path: str, **kwargs: Any) -> httpx.Response:
         started = perf_counter()
-        try:
-            response = self._http.request(method, path, **kwargs)
-        except httpx.TimeoutException:
-            raise LLMTimeout() from None
-        except httpx.HTTPError:
-            raise LLMUnavailable() from None
-        if perf_counter() - started >= self.settings.llm_timeout_s:
-            raise LLMTimeout()
-        if response.status_code == 429:  # provider rate limit (free tiers)
-            raise LLMBusy()
+        retries = 0
+        while True:
+            try:
+                response = self._http.request(method, path, **kwargs)
+            except httpx.TimeoutException:
+                raise LLMTimeout() from None
+            except httpx.HTTPError:
+                raise LLMUnavailable() from None
+            elapsed = perf_counter() - started
+            if elapsed >= self.settings.llm_timeout_s:
+                raise LLMTimeout()
+            if response.status_code != 429:
+                break
+            wait = _retry_after_seconds(response)
+            if (
+                wait is None
+                or retries >= self.max_rate_limit_retries
+                or wait > self.max_retry_after_s
+                or elapsed + wait >= self.settings.llm_timeout_s
+            ):
+                raise LLMBusy()
+            retries += 1
+            logger.info("llm rate limited, retrying in %.1f s", wait)
+            sleep(wait)
         if not response.is_success:
             raise LLMUnavailable()
         return response

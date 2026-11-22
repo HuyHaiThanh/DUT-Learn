@@ -116,6 +116,49 @@ def test_http_errors(status: int, error: type[Exception]) -> None:
     assert client.generate(MESSAGES).text == "Trả lời [1]"
 
 
+def test_short_retry_after_is_waited_out(monkeypatch: pytest.MonkeyPatch) -> None:
+    waits: list[float] = []
+    monkeypatch.setattr("app.rag.llm.sleep", waits.append)
+    calls = 0
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        nonlocal calls
+        calls += 1
+        if calls <= 2:
+            return httpx.Response(429, headers={"retry-after": "3"}, json={})
+        return httpx.Response(200, json=completion())
+
+    assert client_for(handle).generate(MESSAGES).text == "Trả lời [1]"
+    assert waits == [3.0, 3.0]
+
+
+@pytest.mark.parametrize("retry_after", ["60", "abc", "-1"])
+def test_long_or_invalid_retry_after_fails_fast(
+    monkeypatch: pytest.MonkeyPatch, retry_after: str
+) -> None:
+    waits: list[float] = []
+    monkeypatch.setattr("app.rag.llm.sleep", waits.append)
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, headers={"retry-after": retry_after}, json={})
+
+    with pytest.raises(LLMBusy):
+        client_for(handle).generate(MESSAGES)
+    assert waits == []
+
+
+def test_retries_are_bounded(monkeypatch: pytest.MonkeyPatch) -> None:
+    waits: list[float] = []
+    monkeypatch.setattr("app.rag.llm.sleep", waits.append)
+
+    def handle(request: httpx.Request) -> httpx.Response:
+        return httpx.Response(429, headers={"retry-after": "1"}, json={})
+
+    with pytest.raises(LLMBusy):
+        client_for(handle).generate(MESSAGES)
+    assert waits == [1.0, 1.0]
+
+
 def test_timeout_maps_to_llm_timeout() -> None:
     def handle(request: httpx.Request) -> httpx.Response:
         raise httpx.ReadTimeout("slow", request=request)
