@@ -26,10 +26,15 @@ Invoke-RestMethod "$OllamaBase/api/generate" -Method Post -Body $body -ContentTy
 Write-Host "    LLM ready in $([math]::Round($sw.Elapsed.TotalSeconds, 1)) s"
 
 Step 'Asking one question through the API (loads the embedding model)'
-$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
 $headers = @{ 'X-DUT-CSRF' = '1' }
 $login = @{ email = $Email; password = $Password } | ConvertTo-Json
-Invoke-RestMethod "$ApiBase/auth/login" -Method Post -Body $login -ContentType 'application/json' -Headers $headers -WebSession $session | Out-Null
+$resp = Invoke-WebRequest "$ApiBase/auth/login" -Method Post -Body $login -ContentType 'application/json' -Headers $headers -UseBasicParsing
+# With DUT_COOKIE_SECURE=true the session cookie is marked Secure, which the
+# client would not send back over plain http to localhost; pass it explicitly.
+$value = (@($resp.Headers['Set-Cookie']) -join ',') -replace '(?s)^.*?dut_session=([^;]+).*$', '$1'
+if (-not $value -or $value -match '[;,\s]') { throw 'Login did not return a session cookie' }
+$session = New-Object Microsoft.PowerShell.Commands.WebRequestSession
+$session.Cookies.Add((New-Object System.Net.Cookie('dut_session', $value, '/', ([Uri]$ApiBase).Host)))
 $classes = Invoke-RestMethod "$ApiBase/classes" -WebSession $session
 $classList = @($classes)
 if ($classes.PSObject.Properties.Name -contains 'items') { $classList = @($classes.items) }
