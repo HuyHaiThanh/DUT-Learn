@@ -1,3 +1,9 @@
+import { useOutletContext, useParams } from 'react-router-dom';
+import type { ClassOutletContext } from './ClassLayout';
+import { LecturerPractice, StudentPractice } from '@/features/practice/Practice';
+
 export function Practice() {
-  return <section><h2 className="section-title">Luyện tập</h2><p>Mục này đang được xây dựng.</p></section>;
+  const { classId = '' } = useParams();
+  const { classroom, me } = useOutletContext<ClassOutletContext>();
+  return classroom.role === 'lecturer' ? <LecturerPractice key={`${classId}-${me.id}`} classId={classId} userId={me.id} lessons={classroom.lessons} /> : <StudentPractice key={`${classId}-${me.id}`} classId={classId} userId={me.id} />;
 }

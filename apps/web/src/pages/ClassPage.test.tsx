@@ -168,8 +168,7 @@ it.each([
   expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
   expect(mock.mock.calls.filter(([url]) => url === '/api/classes/c1')).toHaveLength(1);
   if (active !== 'Bài học') {
-    expect(screen.getByRole('heading', { level: 2, name: active })).toBeInTheDocument();
-    expect(screen.getByText('Mục này đang được xây dựng.')).toBeInTheDocument();
+    // Section pages own their content; the layout must not load lesson materials for them.
     expect(mock.mock.calls.some(([url]) => url.endsWith('/materials'))).toBe(false);
   }
 });
