@@ -9,7 +9,13 @@ from sqlalchemy.orm import Session
 
 from app import idempotency
 from app.assignments.models import Assignment, GradeRevision, Submission, SubmissionVersion
-from app.assignments.schemas import AssignmentResponse, GradeCreate, SubmissionCreate
+from app.assignments.schemas import (
+    AssignmentCreate,
+    AssignmentResponse,
+    AssignmentUpdate,
+    GradeCreate,
+    SubmissionCreate,
+)
 from app.auth.models import User
 from app.courses.models import ClassMember, Lesson
 from app.deps import ClassRole, class_role, require_class_member
@@ -207,3 +213,48 @@ def roster(db: Session, item: Assignment) -> list[dict[str, Any]]:
             }
         )
     return result
+
+
+def create_assignment(
+    db: Session, user: User, class_id: UUID, body: AssignmentCreate
+) -> AssignmentResponse:
+    access(db, user, class_id, "lecturer")
+    lesson_check(db, class_id, body.lesson_id)
+    item = Assignment(**body.model_dump(), class_id=class_id, created_by=user.id, status="draft")
+    db.add(item)
+    db.commit()
+    return summary(db, user, item)
+
+
+def update_assignment(
+    db: Session, user: User, id: UUID, body: AssignmentUpdate
+) -> AssignmentResponse:
+    item = assignment(db, user, id, "lecturer")
+    values = body.model_dump(exclude_unset=True)
+    if "lesson_id" in values:
+        lesson_check(db, item.class_id, body.lesson_id)
+    if "status" in values and (item.status, body.status) not in {
+        ("draft", "published"),
+        ("published", "closed"),
+        ("closed", "published"),
+    }:
+        raise APIError(409, "invalid_transition", "Không thể chuyển trạng thái bài tập.")
+    for key, value in values.items():
+        setattr(item, key, value)
+    db.commit()
+    return summary(db, user, item)
+
+
+def publish_grade(db: Session, user: User, id: UUID) -> dict[str, Any]:
+    revision = db.get(GradeRevision, id)
+    if revision is None:
+        raise HTTPException(404)
+    version_access(db, user, revision.submission_version_id)
+    db.refresh(revision)
+    if revision.status != "draft":
+        raise APIError(409, "invalid_transition", "Bản chấm đã được công bố.")
+    revision.status = "published"
+    revision.published_at = datetime.now(UTC)
+    revision.published_by = user.id
+    db.commit()
+    return grade_data(revision)

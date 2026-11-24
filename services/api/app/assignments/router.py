@@ -1,13 +1,12 @@
-from datetime import UTC, datetime
 from typing import Any
 from uuid import UUID
 
-from fastapi import APIRouter, Depends, HTTPException, Response
+from fastapi import APIRouter, Depends, Response
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
 from app.assignments import service
-from app.assignments.models import Assignment, GradeRevision, Submission
+from app.assignments.models import Assignment, Submission
 from app.assignments.schemas import (
     AssignmentCreate,
     AssignmentResponse,
@@ -44,12 +43,7 @@ def create_assignment(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AssignmentResponse:
-    service.access(db, user, class_id, "lecturer")
-    service.lesson_check(db, class_id, body.lesson_id)
-    item = Assignment(**body.model_dump(), class_id=class_id, created_by=user.id, status="draft")
-    db.add(item)
-    db.commit()
-    return service.summary(db, user, item)
+    return service.create_assignment(db, user, class_id, body)
 
 
 @router.get("/assignments/{id}")
@@ -66,20 +60,7 @@ def update_assignment(
     db: Session = Depends(get_db),
     user: User = Depends(get_current_user),
 ) -> AssignmentResponse:
-    item = service.assignment(db, user, id, "lecturer")
-    values = body.model_dump(exclude_unset=True)
-    if "lesson_id" in values:
-        service.lesson_check(db, item.class_id, body.lesson_id)
-    if "status" in values and (item.status, body.status) not in {
-        ("draft", "published"),
-        ("published", "closed"),
-        ("closed", "published"),
-    }:
-        raise APIError(409, "invalid_transition", "Không thể chuyển trạng thái bài tập.")
-    for key, value in values.items():
-        setattr(item, key, value)
-    db.commit()
-    return service.summary(db, user, item)
+    return service.update_assignment(db, user, id, body)
 
 
 @router.delete("/assignments/{id}", status_code=204)
@@ -168,15 +149,4 @@ def save_grade(
 def publish_grade(
     id: UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> dict[str, Any]:
-    revision = db.get(GradeRevision, id)
-    if revision is None:
-        raise HTTPException(404)
-    service.version_access(db, user, revision.submission_version_id)
-    db.refresh(revision)
-    if revision.status != "draft":
-        raise APIError(409, "invalid_transition", "Bản chấm đã được công bố.")
-    revision.status = "published"
-    revision.published_at = datetime.now(UTC)
-    revision.published_by = user.id
-    db.commit()
-    return service.grade_data(revision)
+    return service.publish_grade(db, user, id)
