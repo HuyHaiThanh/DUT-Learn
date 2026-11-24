@@ -1,0 +1,33 @@
+import { useQuery } from '@tanstack/react-query';
+import { Link, NavLink, Outlet, useOutletContext, useParams } from 'react-router-dom';
+import { ApiError, apiFetch } from '@/api/client';
+import type { ClassDetail, Me } from '@/api/types';
+import { homePath, isUnauthorized } from '@/features/auth';
+import { LoginRedirect, RetryError } from '@/components/feedback';
+import { formatTerm } from '../Classes';
+
+export interface ClassOutletContext { classroom: ClassDetail; me: Me }
+
+export function ClassLayout() {
+  const { classId = '' } = useParams();
+  const me = useOutletContext<Me>();
+  const classroom = useQuery({ queryKey: ['class', classId], queryFn: () => apiFetch<ClassDetail>(`/classes/${classId}`), retry: false });
+  if (isUnauthorized(classroom.error)) return <LoginRedirect />;
+  const back = classroom.data ? classroom.data.role === 'lecturer' ? '/giang-day' : '/hoc' : me.classes.find(c => c.class_id === classId)?.role === 'lecturer' ? '/giang-day' : homePath(me);
+  const backLink = <Link to={back}>Quay lại danh sách lớp</Link>;
+  if (classroom.error instanceof ApiError && classroom.error.status === 404) return <div className="state-panel"><p role="alert">Không tìm thấy lớp hoặc bạn không có quyền xem.</p>{backLink}</div>;
+  if (classroom.isError) return <RetryError homeTo={back} retry={() => void classroom.refetch()} />;
+  if (classroom.isPending) return <p role="status" className="state-panel">Đang tải lớp…</p>;
+  const data = classroom.data;
+  return <div className="lesson-page" aria-busy={classroom.isFetching}>
+    {backLink}
+    <div className="page-heading"><h1>{data.course_name}</h1><p>{data.code} · {formatTerm(data.term)}</p></div>
+    <nav aria-label="Nội dung lớp" className="mb-5 flex min-w-0 max-w-full gap-2 overflow-x-auto p-1">
+      <NavLink className="nav-link shrink-0 whitespace-nowrap" to={`/lop/${classId}`} end>Bài học</NavLink>
+      <NavLink className="nav-link shrink-0 whitespace-nowrap" to={`/lop/${classId}/bai-tap`}>Bài tập</NavLink>
+      <NavLink className="nav-link shrink-0 whitespace-nowrap" to={`/lop/${classId}/luyen-tap`}>Luyện tập</NavLink>
+      <NavLink className="nav-link shrink-0 whitespace-nowrap" to={`/lop/${classId}/tien-do`}>Tiến độ</NavLink>
+    </nav>
+    <Outlet context={{ classroom: data, me } satisfies ClassOutletContext} />
+  </div>;
+}

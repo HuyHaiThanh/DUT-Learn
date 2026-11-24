@@ -1,15 +1,15 @@
 import { useId, useState } from 'react';
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Link, useOutletContext, useParams } from 'react-router-dom';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useOutletContext, useParams } from 'react-router-dom';
 import { ApiError, apiFetch } from '@/api/client';
-import type { ClassDetail, Lesson, LessonCreate, LessonUpdate, Me } from '@/api/types';
-import { homePath, isUnauthorized } from '@/features/auth';
-import { LoginRedirect, RetryError } from '@/components/feedback';
+import type { Lesson, LessonCreate, LessonUpdate } from '@/api/types';
+import { isUnauthorized } from '@/features/auth';
+import { LoginRedirect } from '@/components/feedback';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { formatTerm } from './Classes';
+import type { ClassOutletContext } from './class/ClassLayout';
 import { LecturerMaterials, MaterialError, MaterialLinks, useMaterials } from '@/features/materials';
 
 function LessonError({ error, id }: { error: Error | null; id?: string }) {
@@ -56,9 +56,8 @@ function PublishDialog({ classId, lesson, disabled }: { classId: string; lesson:
 
 export function ClassPage() {
   const { classId = '' } = useParams();
-  const me = useOutletContext<Me>();
+  const { classroom: data } = useOutletContext<ClassOutletContext>();
   const client = useQueryClient();
-  const classroom = useQuery({ queryKey: ['class', classId], queryFn: () => apiFetch<ClassDetail>(`/classes/${classId}`), retry: false });
   const materials = useMaterials(classId);
   const move = useMutation({
     mutationFn: async ({ lessons, index, step }: { lessons: Lesson[]; index: number; step: number }) => {
@@ -71,19 +70,10 @@ export function ClassPage() {
     },
     onSettled: () => client.invalidateQueries({ queryKey: ['class', classId] }),
   });
-  if (isUnauthorized(classroom.error)) return <LoginRedirect />;
-  const back = classroom.data ? classroom.data.role === 'lecturer' ? '/giang-day' : '/hoc' : me.classes.find(c => c.class_id === classId)?.role === 'lecturer' ? '/giang-day' : homePath(me);
-  const backLink = <Link to={back}>Quay lại danh sách lớp</Link>;
-  if (classroom.error instanceof ApiError && classroom.error.status === 404) return <div className="state-panel"><p role="alert">Không tìm thấy lớp hoặc bạn không có quyền xem.</p>{backLink}</div>;
-  if (classroom.isError) return <RetryError homeTo={back} retry={() => void classroom.refetch()} />;
-  if (classroom.isPending) return <p role="status" className="state-panel">Đang tải lớp…</p>;
-  const data = classroom.data;
   const lecturer = data.role === 'lecturer';
   const lessons = data.lessons.filter(l => lecturer || l.is_published);
   return <div className="lesson-page">
-    {backLink}
-    <div className="page-heading"><h1>{data.course_name}</h1><p>{data.code} · {formatTerm(data.term)}</p></div>
-    <section aria-labelledby="lessons-heading" aria-busy={classroom.isFetching || move.isPending}>
+    <section aria-labelledby="lessons-heading" aria-busy={move.isPending}>
       <div className="admin-heading"><h2 id="lessons-heading" className="section-title">Bài học</h2>{lecturer && <TitleDialog classId={classId} disabled={move.isPending} />}</div>
       <LessonError error={move.error} />
       <MaterialError error={materials.error} />
