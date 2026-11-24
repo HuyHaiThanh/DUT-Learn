@@ -2,8 +2,16 @@ from sqlalchemy import create_engine, pool
 from sqlalchemy.engine import Connection
 
 from alembic import context
+from app.assignments import models as assignments_models  # noqa: F401
+from app.auth import models as auth_models  # noqa: F401
 from app.config import get_settings
+from app.courses import models as courses_models  # noqa: F401
 from app.db import Base
+from app.idempotency import IdempotencyKey  # noqa: F401
+from app.materials import models as materials_models  # noqa: F401
+from app.practice import models as practice_models  # noqa: F401
+from app.progress import models as progress_models  # noqa: F401
+from app.tutor import models as tutor_models  # noqa: F401
 
 url = get_settings().database_url
 

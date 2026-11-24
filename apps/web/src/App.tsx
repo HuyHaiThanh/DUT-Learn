@@ -11,6 +11,10 @@ import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
 import { Classes } from '@/pages/Classes';
 import { ClassPage } from '@/pages/ClassPage';
+import { ClassLayout } from '@/pages/class/ClassLayout';
+import { Assignments } from '@/pages/class/Assignments';
+import { Practice } from '@/pages/class/Practice';
+import { Progress } from '@/pages/class/Progress';
 import { Reader } from '@/pages/Reader';
 import { AdminLayout } from '@/pages/admin/AdminLayout';
 import { Users } from '@/pages/admin/Users';
@@ -55,5 +59,5 @@ function NotFound() {
   return <main className="standalone-page"><Brand /><div className="state-panel"><p className="metadata">404</p><h1>Không tìm thấy trang</h1><p>Đường dẫn này không tồn tại hoặc đã được thay đổi.</p><Button asChild><Link to={me.data ? homePath(me.data) : '/'}>Về trang chủ</Link></Button></div></main>;
 }
 export function App() {
-  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={<Login />} /><Route element={<Shell />}><Route path="/hoc" element={<Classes role="student" />} /><Route path="/giang-day" element={<Classes role="lecturer" />} /><Route path="/quan-tri" element={<AdminLayout />}><Route index element={<Navigate to="nguoi-dung" replace />} /><Route path="nguoi-dung" element={<Users />} /><Route path="hoc-phan" element={<Courses />} /><Route path="lop-hoc-phan" element={<AdminClasses />} /><Route path="lop-hoc-phan/:classId" element={<Members />} /></Route><Route path="/lop/:classId" element={<ClassPage />} /><Route path="/doc/:versionId" element={<Reader />} /></Route><Route path="*" element={<NotFound />} /></Routes>;
+  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={<Login />} /><Route element={<Shell />}><Route path="/hoc" element={<Classes role="student" />} /><Route path="/giang-day" element={<Classes role="lecturer" />} /><Route path="/quan-tri" element={<AdminLayout />}><Route index element={<Navigate to="nguoi-dung" replace />} /><Route path="nguoi-dung" element={<Users />} /><Route path="hoc-phan" element={<Courses />} /><Route path="lop-hoc-phan" element={<AdminClasses />} /><Route path="lop-hoc-phan/:classId" element={<Members />} /></Route><Route path="/lop/:classId" element={<ClassLayout />}><Route index element={<ClassPage />} /><Route path="bai-tap/*" element={<Assignments />} /><Route path="luyen-tap/*" element={<Practice />} /><Route path="tien-do" element={<Progress />} /></Route><Route path="/doc/:versionId" element={<Reader />} /></Route><Route path="*" element={<NotFound />} /></Routes>;
 }

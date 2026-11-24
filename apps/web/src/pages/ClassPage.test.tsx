@@ -1,4 +1,4 @@
-import { act, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, expect, it, vi } from 'vitest';
@@ -10,7 +10,7 @@ const published: Lesson = { id: 'l1', title: 'Mảng một chiều', position: 2
 const draft: Lesson = { id: 'l2', title: 'Con trỏ', position: 2, is_published: false };
 const classroom: ClassDetail = { id: 'c1', course_id: 'course', course_code: 'KTLT', course_name: 'Kỹ thuật lập trình', role: 'student', code: 'KTLT-01', term: '2026-2027.1', status: 'open', content_version: 0, lessons: [published] };
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-function setup(options: { lecturer?: boolean; lessons?: Lesson[]; materials?: Material[]; status?: number; write?: (path: string, init: RequestInit) => Response | Promise<Response>; read?: () => Promise<Response> } = {}) {
+function setup(options: { path?: string; lecturer?: boolean; lessons?: Lesson[]; materials?: Material[]; status?: number; write?: (path: string, init: RequestInit) => Response | Promise<Response>; read?: () => Promise<Response> } = {}) {
   const role = options.lecturer ? 'lecturer' : 'student';
   const me: Me = { id: 'u1', email: 'u@example.test', full_name: 'Nguyễn An', system_role: 'user', classes: [{ class_id: 'c1', role }] };
   const mock = vi.fn(async (path: string, init: RequestInit = {}) => {
@@ -22,7 +22,7 @@ function setup(options: { lecturer?: boolean; lessons?: Lesson[]; materials?: Ma
   });
   vi.stubGlobal('fetch', mock);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
-  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/lop/c1']}><App /></MemoryRouter></QueryClientProvider>);
+  render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[options.path ?? '/lop/c1']}><App /></MemoryRouter></QueryClientProvider>);
   return { mock, client };
 }
 afterEach(() => vi.unstubAllGlobals());
@@ -44,7 +44,7 @@ it('SV chỉ thấy bài công bố, chưa có học liệu và link về đúng
   expect(screen.getByText('KTLT-01 · Học kỳ 1, 2026–2027')).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: published.title })).toBeInTheDocument();
   expect(screen.queryByText(draft.title)).not.toBeInTheDocument();
-  expect(screen.getByText('Chưa có học liệu')).toBeInTheDocument();
+  expect(await screen.findByText('Chưa có học liệu')).toBeInTheDocument();
   expect(screen.queryByRole('button', { name: 'Thêm bài học' })).not.toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Quay lại danh sách lớp' })).toHaveAttribute('href', '/hoc');
 });
@@ -143,4 +143,49 @@ it('401 chuyển đăng nhập', async () => {
   setup({ status: 401 });
   expect(await screen.findByRole('button', { name: 'Đăng nhập' })).toBeInTheDocument();
   expect(screen.getByLabelText('Email')).toBeInTheDocument();
+});
+
+it.each([
+  ['/lop/c1', 'Bài học'],
+  ['/lop/c1/bai-tap', 'Bài tập'],
+  ['/lop/c1/bai-tap/new', 'Bài tập'],
+  ['/lop/c1/luyen-tap', 'Luyện tập'],
+  ['/lop/c1/luyen-tap/new', 'Luyện tập'],
+  ['/lop/c1/tien-do', 'Tiến độ'],
+])('class navigation selects the current section at %s', async (path, active) => {
+  const { mock } = setup({ path });
+  const nav = await screen.findByRole('navigation', { name: 'Nội dung lớp' });
+  const links = within(nav).getAllByRole('link');
+  expect(links).toHaveLength(4);
+  expect(links.map(link => [link.textContent, link.getAttribute('href')])).toEqual([
+    ['Bài học', '/lop/c1'], ['Bài tập', '/lop/c1/bai-tap'],
+    ['Luyện tập', '/lop/c1/luyen-tap'], ['Tiến độ', '/lop/c1/tien-do'],
+  ]);
+  for (const link of links) {
+    if (link.textContent === active) expect(link).toHaveAttribute('aria-current', 'page');
+    else expect(link).not.toHaveAttribute('aria-current');
+  }
+  expect(screen.getAllByRole('heading', { level: 1 })).toHaveLength(1);
+  expect(mock.mock.calls.filter(([url]) => url === '/api/classes/c1')).toHaveLength(1);
+  if (active !== 'Bài học') {
+    expect(screen.getByRole('heading', { level: 2, name: active })).toBeInTheDocument();
+    expect(screen.getByText('Mục này đang được xây dựng.')).toBeInTheDocument();
+    expect(mock.mock.calls.some(([url]) => url.endsWith('/materials'))).toBe(false);
+  }
+});
+it('switching class sections retains the layout and cached class', async () => {
+  const { mock } = setup();
+  const nav = await screen.findByRole('navigation', { name: 'Nội dung lớp' });
+  fireEvent.click(within(nav).getByRole('link', { name: 'Bài tập' }));
+  expect(await screen.findByRole('heading', { level: 2, name: 'Bài tập' })).toBeInTheDocument();
+  expect(within(nav).getByRole('link', { name: 'Bài tập' })).toHaveAttribute('aria-current', 'page');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent(classroom.course_name);
+  expect(mock.mock.calls.filter(([url]) => url === '/api/classes/c1')).toHaveLength(1);
+});
+it.each(['bai-tap', 'luyen-tap', 'tien-do'])('layout handles 404 before rendering %s', async section => {
+  const { mock } = setup({ path: `/lop/c1/${section}`, status: 404 });
+  expect(await screen.findByRole('alert')).toHaveTextContent('Không tìm thấy lớp hoặc bạn không có quyền xem.');
+  expect(screen.queryByRole('navigation', { name: 'Nội dung lớp' })).not.toBeInTheDocument();
+  expect(screen.queryByText('Mục này đang được xây dựng.')).not.toBeInTheDocument();
+  expect(mock.mock.calls.some(([url]) => url.endsWith('/materials'))).toBe(false);
 });
