@@ -81,8 +81,16 @@ def health(db: Session = Depends(get_db)) -> dict[str, str | bool]:
         db_ok = db.execute(text("SELECT 1")).scalar_one() == 1
     except SQLAlchemyError:
         db.rollback()
+    settings = get_settings()
+    base = settings.llm_base_url.rstrip("/")
     try:
-        response = httpx.get(f"{get_settings().llm_base_url.rstrip('/')}/api/version", timeout=2.0)
+        if settings.llm_provider == "openai":
+            key = settings.llm_api_key.get_secret_value() if settings.llm_api_key else ""
+            response = httpx.get(
+                f"{base}/models", headers={"Authorization": f"Bearer {key}"}, timeout=2.0
+            )
+        else:
+            response = httpx.get(f"{base}/api/version", timeout=2.0)
         llm_ok = response.is_success
     except httpx.HTTPError:
         pass
