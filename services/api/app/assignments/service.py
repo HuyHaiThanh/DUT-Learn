@@ -170,6 +170,7 @@ def save_grade(db: Session, user: User, id: UUID, body: GradeCreate) -> dict[str
             status="draft",
         )
         db.add(revision)
+    revision.criteria_snapshot = item.criteria
     revision.grade = body.grade
     revision.comment = body.comment
     db.commit()

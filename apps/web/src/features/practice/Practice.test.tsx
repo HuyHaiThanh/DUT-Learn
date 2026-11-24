@@ -41,7 +41,7 @@ it.each([true, false])('SV chỉ thấy kết quả và giải thích sau nộp:
   await screen.findByText('1 + 1?');
   expect(screen.queryByText('Đáp án đúng')).not.toBeInTheDocument();
   expect(screen.queryByText(result.explanation)).not.toBeInTheDocument();
-  expect(screen.getByRole('group', { name: 'Trắc nghiệm' })).toBeInTheDocument();
+  expect(screen.getByRole('group', { name: '1 + 1?' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: '2' }));
   fireEvent.click(screen.getByRole('button', { name: 'Nộp' }));
   expect(await screen.findByText(correct ? 'Đúng' : 'Sai')).toBeInTheDocument();

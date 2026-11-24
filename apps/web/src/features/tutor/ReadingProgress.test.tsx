@@ -32,8 +32,9 @@ function readerApi() {
   let revoked = false;
   const mock = vi.fn(async (path: string, init?: RequestInit) => {
     void init;
+    if (path === '/api/auth/me') return response({ id: 'u1', system_role: 'user', classes: [] });
     if (path === '/api/classes') return response([{ id: 'c1' }]);
-    if (path === '/api/classes/c1/materials') return response([{ id: 'm1', active_version_id: 'v1' }]);
+    if (path === '/api/classes/c1/materials') return response([{ id: 'm1', title: 'Giáo trình C', active_version_id: 'v1' }]);
     if (path.includes('/pages/')) return revoked ? new Response('{}', { status: 404 }) : response({ page_index: path.includes('/1/text') ? 1 : 0, page_label: 'i', text: 'Nội dung nguồn', chunks: [] }, { 'X-Page-Count': '3', 'X-Material-Kind': 'text' });
     if (path.includes('/tutor/sessions?')) return response([]);
     if (path === '/api/reading-position') return new Response(null, { status: 204 });
@@ -94,6 +95,6 @@ it('tab di động đổi chế độ và trích dẫn cùng tài liệu giữ l
 });
 
 it('ngữ cảnh reader tìm cả version của giảng viên qua API hiện có', async () => {
-  vi.stubGlobal('fetch', vi.fn(async (path: string) => response(path === '/api/classes' ? [{ id: 'c1' }] : [{ id: 'm1', active_version_id: null, versions: [{ id: 'draft' }] }])));
-  expect(await readerContext('draft', new AbortController().signal)).toEqual({ class_id: 'c1', material_id: 'm1' });
+  vi.stubGlobal('fetch', vi.fn(async (path: string) => response(path === '/api/classes' ? [{ id: 'c1' }] : [{ id: 'm1', title: 'Giáo trình C', active_version_id: null, versions: [{ id: 'draft' }] }])));
+  expect(await readerContext('draft', new AbortController().signal)).toEqual({ class_id: 'c1', material_id: 'm1', material_title: 'Giáo trình C' });
 });

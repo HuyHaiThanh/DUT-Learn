@@ -30,7 +30,7 @@ function Detail({ id, classroom }: { id: string } & Pick<ClassOutletContext, 'cl
   if (query.isError) return <ErrorMessage error={query.error} retry={() => void query.refetch()} />;
   const item = query.data;
   return <><Link to={`/lop/${classroom.id}/bai-tap`}>Bài tập</Link><div className="admin-heading"><h2 className="section-title">{item.title}</h2>{classroom.role === 'lecturer' && <AssignmentEditor classId={classroom.id} lessons={classroom.lessons} item={item} />}</div>
-    <p>{date(item.due_at)} · <span className="admin-badge">{labels[item.status]}</span></p><h3>Hướng dẫn</h3><p className="assignment-content">{item.instructions}</p><h3>Tiêu chí chấm</h3><p className="assignment-content">{item.criteria}</p>
+    <section className="assignment-info"><p>{date(item.due_at)} · <span className="admin-badge">{labels[item.status]}</span></p><h3 className="section-title">Hướng dẫn</h3><p className="assignment-content">{item.instructions}</p><h3 className="section-title">Tiêu chí chấm</h3><p className="assignment-content">{item.criteria}</p></section>
     {classroom.role === 'lecturer' ? <LecturerDetail item={item} /> : <StudentDetail item={item} />}
   </>;
 }

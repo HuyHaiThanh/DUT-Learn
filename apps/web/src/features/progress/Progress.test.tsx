@@ -14,7 +14,7 @@ const data: ProgressData = {
   results: { assignments_submitted: 1, assignments_available: 2, grades: [{ assignment_id: 'a1', title: 'Bài tập mảng', grade: 8.5, published_at: '2026-11-12T16:59:00Z' }], practice_attempted: 4, practice_available: 6, practice_mcq_correct_last: 3, practice_mcq_attempted: 3 },
 };
 function setup(body: ProgressData | StudentProgress[], lecturer = false, fail = false) {
-  const mock = vi.fn(async () => new Response(JSON.stringify(body), { status: fail ? 503 : 200 }));
+  const mock = vi.fn(async (path: string) => path === '/api/auth/me' ? new Response('{}', { status: 401 }) : new Response(JSON.stringify(body), { status: fail ? 503 : 200 }));
   vi.stubGlobal('fetch', mock);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={['/progress']}><Routes><Route element={<Outlet context={{ classroom: { id: 'c1', role: lecturer ? 'lecturer' : 'student' } }} />}><Route path="/progress" element={<Progress />} /></Route></Routes></MemoryRouter></QueryClientProvider>);
@@ -60,7 +60,7 @@ it('shows the student empty state', async () => {
 it('retries a failed progress request', async () => {
   const mock = setup(data, false, true);
   fireEvent.click(await screen.findByRole('button', { name: 'Thử lại' }));
-  await waitFor(() => expect(mock).toHaveBeenCalledTimes(2));
+  await waitFor(() => expect(mock.mock.calls.filter(([path]) => path === '/api/classes/c1/progress/me')).toHaveLength(2));
 });
 
 it('silently absorbs event errors with CSRF and all client event types', async () => {
@@ -76,8 +76,9 @@ it('silently absorbs event errors with CSRF and all client event types', async (
 
 it('records one material open across page changes and StrictMode effect replay', async () => {
   const mock = vi.fn(async (path: string) => {
+    if (path === '/api/auth/me') return new Response(JSON.stringify({ id: 'u1', system_role: 'user', classes: [] }));
     if (path === '/api/classes') return new Response(JSON.stringify([{ id: 'c1' }]));
-    if (path === '/api/classes/c1/materials') return new Response(JSON.stringify([{ id: 'm1', active_version_id: 'v1' }]));
+    if (path === '/api/classes/c1/materials') return new Response(JSON.stringify([{ id: 'm1', title: 'Giáo trình C', active_version_id: 'v1' }]));
     if (path.includes('/tutor/sessions')) return new Response('[]');
     if (path === '/api/events' || path === '/api/reading-position') return new Response(null, { status: 204 });
     return new Response(JSON.stringify({ page_index: 0, page_label: '1', text: 'Synthetic page', chunks: [] }), { headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } });

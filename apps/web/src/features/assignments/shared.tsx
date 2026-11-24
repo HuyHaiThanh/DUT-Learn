@@ -8,6 +8,7 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isUnauthorized } from '@/features/auth';
+import { formatDateTime } from '@/lib/datetime';
 
 export type Assignment = { id: string; title: string; instructions: string; criteria: string; due_at: string | null; lesson_id: string | null; status: 'draft' | 'published' | 'closed'; submission_count: number; my_versions: number; my_grade_published: boolean };
 export type Grade = { revision_id: string; revision_no: number; status: 'draft' | 'published'; grade: number | null; comment: string; criteria_snapshot: string; published_at: string | null };
@@ -17,9 +18,7 @@ export const labels = { draft: 'Nháp', published: 'Đang mở nộp', closed: '
 export const request = <T,>(path: string, body?: unknown, method = 'POST') => apiFetch<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 export function date(value: string | null) {
   if (!value) return 'Không có hạn nộp';
-  const parts = new Intl.DateTimeFormat('vi-VN', { timeZone: 'Asia/Ho_Chi_Minh', hour: '2-digit', minute: '2-digit', day: '2-digit', month: '2-digit', year: 'numeric', hourCycle: 'h23' }).formatToParts(new Date(value));
-  const part = (name: string) => parts.find(p => p.type === name)?.value;
-  return `${part('hour')}:${part('minute')}, ${part('day')}/${part('month')}/${part('year')}`;
+  return formatDateTime(value);
 }
 export function localDate(value: string | null) {
   return value ? new Date(new Date(value).getTime() + 7 * 3600000).toISOString().slice(0, 16) : '';

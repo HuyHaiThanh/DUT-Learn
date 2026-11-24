@@ -10,15 +10,15 @@ const item: Assignment = { id: 'a1', title: 'Con trỏ', instructions: 'Viết c
 const version: Version = { id: 'v1', version_id: 'v1', version_no: 1, content: 'int main() {\n  return 0;\n}', submitted_at: '2026-11-12T16:59:00Z', is_late: false, grade: null };
 const grade: Grade = { revision_id: 'g1', revision_no: 1, status: 'draft', grade: 8.25, comment: 'Nhận xét nháp', criteria_snapshot: 'Đúng kết quả', published_at: null };
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
-function setup({ role = 'student', detail = true, assignment = item, versions = [] as Version[], write = async () => response({}) }:
-  { role?: 'student' | 'lecturer'; detail?: boolean; assignment?: Assignment; versions?: Version[]; write?: (path: string, init: RequestInit) => Promise<Response> } = {}) {
+function setup({ role = 'student', detail = true, assignment = item, versions = [] as Version[], revisions = () => [grade], write = async () => response({}) }:
+  { role?: 'student' | 'lecturer'; detail?: boolean; assignment?: Assignment; versions?: Version[]; revisions?: () => Grade[]; write?: (path: string, init: RequestInit) => Promise<Response> } = {}) {
   const mock = vi.fn(async (path: string, init: RequestInit = {}) => {
     if (init?.method) return write(path, init);
     if (path === '/api/classes/c1/assignments') return response([assignment]);
     if (path === '/api/assignments/a1') return response(assignment);
     if (path === '/api/assignments/a1/submissions/me') return response(versions);
     if (path === '/api/assignments/a1/submissions') return response([{ student: { id: 's1', full_name: 'Nguyễn An', email: 'an@example.test' }, versions: [version], latest_grade: grade }]);
-    if (path === '/api/submission-versions/v1') return response({ ...version, revisions: [grade] });
+    if (path === '/api/submission-versions/v1') return response({ ...version, revisions: revisions() });
     throw new Error(`Unexpected ${path}`);
   });
   vi.stubGlobal('fetch', mock);
@@ -29,6 +29,22 @@ function setup({ role = 'student', detail = true, assignment = item, versions = 
   return mock;
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it('enables publishing after saving 8.50 as numeric 8.5', async () => {
+  let saved = grade;
+  setup({ role: 'lecturer', revisions: () => [saved], write: async () => {
+    saved = { ...grade, grade: 8.5 };
+    return response(saved);
+  } });
+  fireEvent.click(await screen.findByRole('button', { name: 'Nguyễn An' }));
+  fireEvent.change(await screen.findByLabelText('Điểm'), { target: { value: '8.50' } });
+  expect(screen.getByRole('button', { name: 'Công bố điểm' })).toBeDisabled();
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }));
+  await screen.findByText('Đã lưu nháp.');
+  await waitFor(() => expect(screen.getByRole('button', { name: 'Công bố điểm' })).toBeEnabled());
+  fireEvent.change(screen.getByLabelText('Điểm'), { target: { value: '' } });
+  expect(screen.getByRole('button', { name: 'Công bố điểm' })).toBeDisabled();
+});
 
 it('creates an assignment with the exact body and Vietnam due date', async () => {
   const mock = setup({ role: 'lecturer', detail: false });
@@ -69,7 +85,7 @@ it('keeps the payload and key after network failure, changes key on editing', as
 it('shows only published feedback for each student version', async () => {
   const write = vi.fn(async () => response({}));
   setup({ write, versions: [version, { ...version, id: 'v2', version_id: 'v2', version_no: 2, grade: { revision_id: 'r2', grade: 9.5, comment: 'Đã công bố nhận xét', published_at: '2026-11-13T00:00:00Z' } }] });
-  expect(await screen.findByText('9,5/10')).toBeInTheDocument();
+  expect(await screen.findByText('Điểm: 9,5/10')).toBeInTheDocument();
   await waitFor(() => expect(write).toHaveBeenCalledWith('/api/events', expect.objectContaining({ body: JSON.stringify({ class_id: 'c1', type: 'feedback_viewed', ref_id: 'r2' }) })));
   expect(screen.getByText('Đã công bố nhận xét')).toBeInTheDocument();
   expect(screen.queryByText('Nhận xét nháp')).not.toBeInTheDocument();

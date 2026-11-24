@@ -166,8 +166,6 @@ def submit_attempt(
     db: Session, user: User, question: PracticeQuestion, data: AttemptCreate
 ) -> AttemptResult:
     require_student(db, user, question)
-    if question.status != "published":
-        raise HTTPException(404)
     payload = {"question_id": str(question.id), "response": data.response}
 
     def replay() -> AttemptResult | None:
@@ -182,6 +180,8 @@ def submit_attempt(
     existing = replay()
     if existing is not None:
         return existing
+    if question.status != "published":
+        raise HTTPException(404)
     if not data.response.strip() or (
         question.kind == "mcq"
         and data.response not in {str(i) for i in range(len(question.options or []))}

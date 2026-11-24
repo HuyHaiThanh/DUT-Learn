@@ -6,15 +6,12 @@ import { LoginRedirect, RetryError } from '@/components/feedback';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isUnauthorized } from '@/features/auth';
+import { formatDateTime as date } from '@/lib/datetime';
 import type { ProgressData, StudentProgress } from '@/features/progress/api';
 import type { ClassOutletContext } from './ClassLayout';
 import '@/features/progress/progress.css';
 
 const note = 'Các số liệu chỉ phản ánh hoạt động đã được ghi nhận trên DUTLearn, không phải đánh giá năng lực.';
-function date(value: string) {
-  const d = new Date(value);
-  return `${d.toLocaleTimeString('vi-VN', { hour: '2-digit', minute: '2-digit' })}, ${d.toLocaleDateString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric' })}`;
-}
 function Metric({ label, value, total }: { label: string; value: number; total?: number }) {
   return <div className="progress-metric"><div><span>{label}</span><span>{value}{total !== undefined && ` / ${total}`}</span></div>{total !== undefined && <div className="progress-track" aria-hidden="true"><div style={{ width: `${total > 0 ? Math.min(100, value / total * 100) : 0}%` }} /></div>}</div>;
 }

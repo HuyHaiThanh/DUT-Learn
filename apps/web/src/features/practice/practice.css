@@ -16,3 +16,6 @@
 .practice-form textarea, .practice-card textarea { min-height: 100px; resize: vertical; }
 .practice-result { margin-block: 1rem; border-left: 3px solid var(--primary); padding-left: 1rem; }
 .practice-result .row-title { display: flex; align-items: center; gap: .5rem; }
+.practice-card legend { font-size: 16px; font-weight: 600; max-width: 100%; }
+.practice-correct { color: var(--success); }
+.practice-incorrect { color: var(--danger); }

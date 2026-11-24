@@ -5,14 +5,34 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { HighlightedText, Reader } from './Reader';
 
 function Location() { return <output data-testid="location">{useLocation().search}</output>; }
-function setup(entry = '/doc/v1?page=1', fail?: number) {
-  const mock = vi.fn(async (path: string) => path === '/api/classes' ? new Response('[]') : new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text: 'A😀 Nội dung trang', chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } }));
+function setup(entry = '/doc/v1?page=1', fail?: number, withContext = false) {
+  const mock = vi.fn(async (path: string) => {
+    if (path === '/api/auth/me') return new Response(JSON.stringify({ id: 'u1', system_role: 'user', classes: [] }));
+    if (path === '/api/classes') return new Response(JSON.stringify(withContext ? [{ id: 'c1' }] : []));
+    if (path === '/api/classes/c1/materials') return new Response(JSON.stringify([{ id: 'm1', title: 'Giáo trình C', active_version_id: 'v1' }]));
+    if (path.includes('/tutor/sessions')) return new Response('[]');
+    if (path === '/api/events' || path === '/api/reading-position') return new Response('{}');
+    return new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text: 'A😀 Nội dung trang', chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } });
+  });
   vi.stubGlobal('fetch', mock);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[entry]}><Location /><Routes><Route path="/doc/:versionId" element={<Reader />} /></Routes></MemoryRouter></QueryClientProvider>);
   return { mock, client };
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it('links to the class and shows the material title from existing lists', async () => {
+  const { mock } = setup('/doc/v1?page=1', undefined, true);
+  expect(await screen.findByRole('heading', { level: 1, name: 'Giáo trình C' })).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: 'Về lớp' })).toHaveAttribute('href', '/lop/c1');
+  expect(mock).toHaveBeenCalledWith('/api/classes/c1/materials', expect.anything());
+});
+
+it('links to the learning home when reader context is unavailable', async () => {
+  setup('/doc/v1?page=1', 404);
+  await screen.findByRole('alert');
+  await waitFor(() => expect(screen.getByRole('link', { name: 'Về lớp' })).toHaveAttribute('href', '/hoc'));
+});
 
 it('đọc trang từ URL, tô sáng theo code point và không hiện trợ giảng khi chưa có ngữ cảnh', async () => {
   const { mock } = setup('/doc/v1?page=2&hl=3-6');

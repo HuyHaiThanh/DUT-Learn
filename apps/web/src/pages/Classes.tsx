@@ -25,6 +25,8 @@ export function Classes({ role }: { role: ClassRole }) {
   const classes = useQuery({ queryKey: ['classes', me.id], queryFn: () => apiFetch<ClassSummary[]>('/classes'), retry: false });
   if (isUnauthorized(classes.error)) return <LoginRedirect />;
   const rows = classes.data?.filter(c => c.role === role && c.status === 'open' && me.classes.some(m => m.class_id === c.id && m.role === role)) ?? [];
+  const memberships = me.classes.filter(m => m.role === role);
+  const allClosed = memberships.length > 0 && memberships.every(m => !classes.data?.some(c => c.id === m.class_id && c.status === 'open'));
   const terms = [...new Set(rows.map(c => c.term))];
   const givenName = greetingName(me.full_name);
   return <>
@@ -36,7 +38,7 @@ export function Classes({ role }: { role: ClassRole }) {
       <h2 id="classes-heading" className="section-title">{role === 'student' ? 'Lớp đang học' : 'Lớp đang giảng dạy'}</h2>
       {classes.isPending ? <div className="state-panel" role="status">Đang tải danh sách lớp…</div> : classes.isError ? <RetryError homeTo={homePath(me)} retry={() => void classes.refetch()} /> : rows.length ? <div className="list-panel">{rows.map(c => <Link className="class-row" key={c.id} to={`/lop/${encodeURIComponent(c.id)}`}>
         <span className="class-copy"><span className="row-title">{c.course_name}</span><span className="metadata">{c.code} · {formatTerm(c.term)}{role === 'lecturer' && ' · vai trò giảng viên'}</span></span><Chevron />
-      </Link>)}</div> : <div className="state-panel"><h3>{role === 'student' ? 'Bạn chưa được ghi danh lớp nào' : 'Bạn chưa được phân công lớp nào'}</h3><p>Vui lòng liên hệ giảng viên hoặc quản trị viên để được hỗ trợ.</p></div>}
+      </Link>)}</div> : <div className="state-panel"><h3>{allClosed ? 'Các lớp của bạn đã kết thúc.' : role === 'student' ? 'Bạn chưa được ghi danh lớp nào' : 'Bạn chưa được phân công lớp nào'}</h3><p>Vui lòng liên hệ giảng viên hoặc quản trị viên để được hỗ trợ.</p></div>}
       {role === 'student' && <p className="class-note">Đợt thử nghiệm chỉ gồm học phần Kỹ thuật lập trình. Không thấy lớp của bạn? Liên hệ giảng viên phụ trách để được ghi danh.</p>}
     </section>
   </>;
