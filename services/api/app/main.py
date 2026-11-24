@@ -47,6 +47,7 @@ app.include_router(courses_router)
 app.include_router(materials_router)
 app.include_router(tutor_router)
 app.include_router(progress_router)
+app.include_router(__import__("app.assignments.router", fromlist=["router"]).router)
 logger = logging.getLogger(__name__)
 
 
