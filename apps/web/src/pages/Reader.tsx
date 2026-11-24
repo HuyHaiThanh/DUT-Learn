@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import { TutorPanel } from '@/features/tutor/TutorPanel';
 import { readerContext } from '@/features/tutor/api';
 import { useReadingPosition } from '@/features/tutor/ReadingProgress';
+import { sendEvent } from '@/features/events';
 
 type PageText = { page_index: number; page_label: string; text: string; chunks: { id: string; ordinal: number; kind: string; char_start: number; char_end: number }[] };
 type ReaderPage = PageText & { count: number; kind: string };
@@ -119,6 +120,12 @@ export function Reader() {
   const query = useQuery({ queryKey: ['reader', versionId, page], queryFn: ({ signal }) => loadPage(versionId, page, signal), retry: false, gcTime: 0, staleTime: 0 });
   const error = query.error ?? pdfError;
   const context = useQuery({ queryKey: ['reader-context', versionId], queryFn: ({ signal }) => readerContext(versionId, signal), retry: false, gcTime: 0 });
+  const openedMaterials = useRef(new Set<string>());
+  useEffect(() => {
+    if (!context.data?.class_id || !context.data.material_id || openedMaterials.current.has(context.data.material_id)) return;
+    openedMaterials.current.add(context.data.material_id);
+    void sendEvent(context.data.class_id, 'material_opened', context.data.material_id);
+  }, [context.data]);
   const positionError = useReadingPosition(context.data, versionId, page - 1, !!query.data && !error && !query.isFetching);
   // Keep PDF mounted and retain navigation while the next page text loads.
   const [knownPage, setKnownPage] = useState({ versionId: '', count: 0, kind: '' });
