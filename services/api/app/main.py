@@ -13,6 +13,7 @@ from sqlalchemy.orm import Session
 from starlette.exceptions import HTTPException
 
 from app.admin.router import router as admin_router
+from app.assignments.router import router as assignments_router
 from app.auth.router import router as auth_router
 from app.config import get_settings
 from app.courses.router import router as courses_router
@@ -49,6 +50,7 @@ app.include_router(materials_router)
 app.include_router(tutor_router)
 app.include_router(progress_router)
 app.include_router(practice_router)
+app.include_router(assignments_router)
 logger = logging.getLogger(__name__)
 
 

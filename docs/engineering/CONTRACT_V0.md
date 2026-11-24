@@ -171,7 +171,7 @@ Chốt các điểm bảng §3/§5 chưa nói. Migration `0006_assignments_pract
 - `assignments.status`: `draft` (chỉ GV thấy) → `published` (SV thấy, nộp được) → `closed` (SV còn xem, không nộp được: 409 `assignment_closed`). `due_at` chỉ để hiển thị và đánh dấu nộp muộn (`is_late = submitted_at > due_at`), không chặn nộp.
 - Bài nộp là văn bản (Markdown thuần, 1–20.000 ký tự); không nhận file. Mỗi lần nộp lại tạo `submission_versions.version_no` mới; bản cũ giữ nguyên.
 - Điểm thang **0–10**, hai chữ số thập phân (`NUMERIC(4,2)`), có thể để trống nếu chỉ phản hồi. `criteria_snapshot` = `assignments.criteria` tại lúc chấm. `grade_revisions` bất biến sau `published`; sửa = revision mới. SV chỉ thấy revision `published` mới nhất của **chính mình**; không thấy bản nháp, không thấy bài của người khác.
-- Thêm `GET /assignments/{id}/submissions/me` (student): các version của chính mình + điểm/nhận xét đã công bố.
+- Thêm `GET /assignments/{id}/submissions/me` (student): các version của chính mình + điểm/nhận xét đã công bố (`grade.revision_id` là revision `published` mới nhất, dùng làm `ref_id` của `feedback_viewed`).
 
 **Luyện tập (T21a, T22; T21b sinh câu bằng AI để sau).**
 - Thêm `POST /classes/{id}/practice` (lecturer): tạo câu `origin=lecturer`, `status=draft`. `mcq`: `options` 2–6 chuỗi, `answer_key` = chỉ số đáp án đúng dạng chuỗi (`"0"`…); `short`: `options=null`, `answer_key` = đáp án mẫu.
