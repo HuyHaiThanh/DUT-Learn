@@ -221,6 +221,37 @@ def test_short_response(db_client, practice_data):
     assert result["explanation"] == "Reason"
 
 
+@pytest.mark.parametrize("action", ["retire", "supersede"])
+def test_retry_retired_question(db_client, practice_data, action):
+    question = create(db_client, practice_data, publish=True)
+    login(db_client, practice_data, "student")
+    key = str(uuid4())
+    first = attempt(db_client, question, key=key)
+    assert first.status_code == 200
+    login(db_client, practice_data, "lecturer")
+    path = f"/api/practice/{question['id']}"
+    if action == "retire":
+        assert db_client.post(path + "/retire", headers=CSRF).status_code == 200
+    else:
+        assert db_client.patch(path, headers=CSRF, json={"stem": "New"}).status_code == 200
+    login(db_client, practice_data, "student")
+    retried = attempt(db_client, question, key=key)
+    assert retried.status_code == 200
+    assert retried.json() == first.json()
+    assert len(db_client.get(path + "/attempts/me").json()) == 1
+    assert attempt(db_client, question).status_code == 404
+    conflict = attempt(db_client, question, response="0", key=key)
+    assert conflict.status_code == 409
+    assert conflict.json()["error"]["code"] == "idempotency_conflict"
+    for actor, status in [("other_student", 404), ("lecturer", 403)]:
+        login(db_client, practice_data, actor)
+        assert attempt(db_client, question, key=key).status_code == status
+    practice_data[1].status = "closed"
+    practice_data[0].commit()
+    login(db_client, practice_data, "student")
+    assert attempt(db_client, question, key=key).status_code == 404
+
+
 @pytest.mark.parametrize(
     "actor,read,write",
     [

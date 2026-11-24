@@ -25,6 +25,7 @@ it('giữ PDF qua hai lần chuyển trang, zoom, resize; đổi version và unm
   let resolvePage!: (value: Response) => void;
   const pageResponse = () => new Response(JSON.stringify({ page_index: 0, page_label: '1', text: 'PDF text', chunks: [] }), { headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'pdf' } });
   const fetchMock = vi.fn(async (path: string) => {
+    if (path === '/api/auth/me') return new Response(JSON.stringify({ id: 'u1', system_role: 'user', classes: [] }));
     if (path.endsWith('/file')) return new Response(new Uint8Array([1, 2]));
     if (path === '/api/classes') return new Response('[]');
     if (path.includes('/pages/1/')) return new Promise<Response>(resolve => { resolvePage = resolve; });

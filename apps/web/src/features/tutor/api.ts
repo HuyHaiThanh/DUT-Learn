@@ -20,12 +20,12 @@ export interface Position extends Context {
 }
 
 /** Page text has no material metadata; resolve it through the existing authorized lists. */
-export async function readerContext(versionId: string, signal: AbortSignal): Promise<Context | null> {
+export async function readerContext(versionId: string, signal: AbortSignal): Promise<(Context & { material_title: string }) | null> {
   const classes = await apiFetch<ClassSummary[]>('/classes', { signal, cache: 'no-store' });
   const lists = await Promise.all(classes.map(async classroom => {
-    const materials = await apiFetch<{ id: string; active_version_id: string | null; versions?: { id: string }[] }[]>(`/classes/${classroom.id}/materials`, { signal, cache: 'no-store' });
+    const materials = await apiFetch<{ id: string; title: string; active_version_id: string | null; versions?: { id: string }[] }[]>(`/classes/${classroom.id}/materials`, { signal, cache: 'no-store' });
     const material = materials.find(m => m.active_version_id === versionId || m.versions?.some(v => v.id === versionId));
-    return material ? { class_id: classroom.id, material_id: material.id } : null;
+    return material ? { class_id: classroom.id, material_id: material.id, material_title: material.title } : null;
   }));
   return lists.find(Boolean) ?? null;
 }

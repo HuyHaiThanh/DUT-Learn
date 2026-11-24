@@ -51,8 +51,13 @@ it('401 từ me chuyển login và giữ đường dẫn quay lại', async () =
   expect(screen.getByLabelText('Đường dẫn')).toHaveTextContent('/hoc?tab=lop#danh-sach');
 });
 it('danh sách lớp rỗng', async () => {
-  vi.stubGlobal('fetch', mockApi()); mount();
+  vi.stubGlobal('fetch', mockApi({ ...student, classes: [] })); mount();
   expect(await screen.findByText('Bạn chưa được ghi danh lớp nào')).toBeInTheDocument();
+});
+it.each([student, lecturer])('shows ended classes when the open-class API returns none %#', async me => {
+  vi.stubGlobal('fetch', mockApi(me)); mount(me === lecturer ? '/giang-day' : '/hoc');
+  expect(await screen.findByText('Các lớp của bạn đã kết thúc.')).toBeInTheDocument();
+  expect(screen.queryByText('Bạn chưa được ghi danh lớp nào')).not.toBeInTheDocument();
 });
 it('hiển thị hai điều hướng khi có hai vai trò', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, classes: [...student.classes, { class_id: 'c2', role: 'lecturer' }] })); mount();
@@ -64,7 +69,7 @@ it('lọc đúng lớp, vai trò và trạng thái sinh viên', async () => {
     { ...classSummary, code: 'ĐÃ ĐÓNG', term: '2026', status: 'closed' },
     { ...classSummary, id: 'other', code: 'NGOÀI LỚP', term: '2026', status: 'open' },
   ])); mount('/hoc');
-  await screen.findByText('Bạn chưa được ghi danh lớp nào');
+  await screen.findByText('Các lớp của bạn đã kết thúc.');
   expect(screen.queryByText('NGOÀI LỚP')).not.toBeInTheDocument();
   expect(screen.queryByText('ĐÃ ĐÓNG')).not.toBeInTheDocument();
 });
@@ -78,7 +83,7 @@ it('lỗi mạng và thử lại danh sách lớp', async () => {
   vi.stubGlobal('fetch', fetchMock); mount('/hoc');
   expect(await screen.findByRole('alert')).toHaveTextContent('Không thể kết nối');
   fireEvent.click(screen.getByRole('button', { name: 'Thử lại' }));
-  await screen.findByText('Bạn chưa được ghi danh lớp nào');
+  await screen.findByText('Các lớp của bạn đã kết thúc.');
   expect(classAttempts).toBe(2);
 });
 it('401 khi tải danh sách lớp chuyển về login', async () => {
@@ -201,7 +206,7 @@ it('lỗi danh sách có đường về trang chủ giảng viên', async () => 
   fetchMock.mockRejectedValueOnce(new TypeError('offline'));
   vi.stubGlobal('fetch', fetchMock); mount('/giang-day');
   await screen.findByRole('alert');
-  expect(screen.getByRole('link', { name: 'Về trang chủ' })).toHaveAttribute('href', '/giang-day');
+  expect(screen.getByRole('link', { name: 'Về trang học tập' })).toHaveAttribute('href', '/giang-day');
 });
 it('không hiện lớp sai vai trò dù đã ghi danh lớp khác', async () => {
   vi.stubGlobal('fetch', mockApi(student, [{ ...classSummary, role: 'lecturer' }])); mount('/hoc');

@@ -117,14 +117,14 @@ function StudentCard({ question }: { question: StudentQuestion }) {
   }
   function restart() { submission.current = null; setResponse(''); setResult(null); setLocked(false); mutation.reset(); }
   return <article className="practice-card">
-    <QuestionStem text={question.stem} /><p className="metadata" aria-live="polite">Đã làm {Math.max(count, question.my_attempts)} lần</p>
+    <p className="metadata">{question.kind === 'mcq' ? 'Trắc nghiệm' : 'Tự luận ngắn'}</p>{question.kind === 'short' && <QuestionStem text={question.stem} />}<p className="metadata" aria-live="polite">Đã làm {Math.max(count, question.my_attempts)} lần</p>
     <form onSubmit={e => { e.preventDefault(); submit(); }} aria-label="Trả lời câu luyện tập">
-      {question.kind === 'mcq' ? <fieldset disabled={locked || mutation.isPending}><legend>Trắc nghiệm</legend>{question.options?.map((option, i) => <label className="practice-radio" key={i}><input type="radio" name={id} checked={response === String(i)} onChange={() => setResponse(String(i))} /><span>{option}</span></label>)}</fieldset> : <div className="form-field"><Label htmlFor={id}>Câu trả lời</Label><textarea id={id} required maxLength={5000} disabled={locked || mutation.isPending} value={response} onChange={e => setResponse(e.target.value)} /></div>}
+      {question.kind === 'mcq' ? <fieldset disabled={locked || mutation.isPending}><legend><QuestionStem text={question.stem} /></legend>{question.options?.map((option, i) => <label className="practice-radio" key={i}><input type="radio" name={id} checked={response === String(i)} onChange={() => setResponse(String(i))} /><span>{option}</span></label>)}</fieldset> : <div className="form-field"><Label htmlFor={id}>Câu trả lời</Label><textarea id={id} required maxLength={5000} disabled={locked || mutation.isPending} value={response} onChange={e => setResponse(e.target.value)} /></div>}
       {!result && <Button type="submit" disabled={mutation.isPending || !response.trim()}>{mutation.isPending ? 'Đang nộp…' : 'Nộp'}</Button>}
     </form>
     <PracticeError error={mutation.error} />
     {result && <div className="practice-result" role="status">
-      <p className="row-title">{result.is_correct === null ? 'Đã ghi nhận câu trả lời' : <><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={result.is_correct ? 'm5 12 4 4L19 6' : 'm6 6 12 12M6 18 18 6'} /></svg>{result.is_correct ? 'Đúng' : 'Sai'}</>}</p>
+      <p className={`row-title${result.is_correct === null ? '' : result.is_correct ? ' practice-correct' : ' practice-incorrect'}`}>{result.is_correct === null ? 'Đã ghi nhận câu trả lời' : <><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={result.is_correct ? 'm5 12 4 4L19 6' : 'm6 6 12 12M6 18 18 6'} /></svg>{result.is_correct ? 'Đúng' : 'Sai'}</>}</p>
       <p>{question.kind === 'mcq' ? 'Đáp án đúng' : 'Đáp án mẫu'}</p><QuestionStem text={question.kind === 'mcq' ? question.options?.[Number(result.answer_key)] ?? result.answer_key : result.answer_key} />
       <p>Giải thích</p><QuestionStem text={result.explanation} />
       {question.kind === 'short' && <p>Câu tự luận không chấm tự động; hãy tự đối chiếu với đáp án mẫu.</p>}

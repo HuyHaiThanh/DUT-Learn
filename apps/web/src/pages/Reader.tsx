@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import { ApiError } from '@/api/client';
-import { isUnauthorized } from '@/features/auth';
+import { homePath, isUnauthorized, useMe } from '@/features/auth';
 import { LoginRedirect } from '@/components/feedback';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -110,6 +110,7 @@ export function ReaderLayout({ children, assistant, citationLocation }: { childr
 }
 
 export function Reader() {
+  const { data: me } = useMe();
   const { versionId = '' } = useParams();
   const location = useLocation();
   const [params, setParams] = useSearchParams();
@@ -120,6 +121,7 @@ export function Reader() {
   const query = useQuery({ queryKey: ['reader', versionId, page], queryFn: ({ signal }) => loadPage(versionId, page, signal), retry: false, gcTime: 0, staleTime: 0 });
   const error = query.error ?? pdfError;
   const context = useQuery({ queryKey: ['reader-context', versionId], queryFn: ({ signal }) => readerContext(versionId, signal), retry: false, gcTime: 0 });
+  const backTo = context.data ? `/lop/${context.data.class_id}` : me ? homePath(me) : '/';
   const openedMaterials = useRef(new Set<string>());
   useEffect(() => {
     if (!context.data?.class_id || !context.data.material_id || openedMaterials.current.has(context.data.material_id)) return;
@@ -153,10 +155,10 @@ export function Reader() {
     return () => window.removeEventListener('keydown', keydown);
   }, [count, page, params, setParams, error]);
   if (isUnauthorized(error) || isUnauthorized(context.error) || isUnauthorized(positionError)) return <LoginRedirect />;
-  if (error) return <div className="state-panel"><p role="alert">{error instanceof ApiError && [403, 404, 410].includes(error.status) ? 'Tài liệu không tồn tại hoặc đã bị thu hồi.' : 'Không thể tải tài liệu. Vui lòng thử lại.'}</p><Button onClick={() => { setPdfError(null); void query.refetch(); }}>Thử lại</Button><Link to="/">Về danh sách lớp</Link></div>;
+  if (error) return <div className="state-panel"><p role="alert">{error instanceof ApiError && [403, 404, 410].includes(error.status) ? 'Tài liệu không tồn tại hoặc đã bị thu hồi.' : 'Không thể tải tài liệu. Vui lòng thử lại.'}</p><Button onClick={() => { setPdfError(null); void query.refetch(); }}>Thử lại</Button><Link to={backTo}>Về lớp</Link></div>;
   if (query.isPending && knownCount === 0) return <p role="status">Đang tải tài liệu…</p>;
   const data = query.data;
-  return <div className="reader-page"><Link to="/">Về danh sách lớp</Link><h1>Trình đọc học liệu</h1>
+  return <div className="reader-page"><Link to={backTo}>Về lớp</Link><h1>{context.data?.material_title || 'Trình đọc học liệu'}</h1>
     <div className="reader-toolbar" aria-label="Điều khiển tài liệu">
       <Button variant="outline" disabled={page <= 1} onClick={() => navigate(page - 1)}>Trang trước</Button>
       <form key={page} onSubmit={e => { e.preventDefault(); const value = Number(new FormData(e.currentTarget).get('page')); if (Number.isInteger(value)) navigate(value); }}><label htmlFor="reader-page-number">Trang</label><Input id="reader-page-number" name="page" type="number" min={1} max={count} defaultValue={page} required /><span>/ {count}</span><Button variant="outline" type="submit">Đến trang</Button></form>
