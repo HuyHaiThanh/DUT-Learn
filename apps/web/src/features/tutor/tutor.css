@@ -23,3 +23,5 @@
 .tutor-panel textarea { width: 100%; min-width: 0; box-sizing: border-box; resize: vertical; border: 1px solid var(--control); border-radius: 6px; padding: 10px; font: inherit; background: var(--surface); color: var(--ink); }
 .tutor-panel button:focus-visible, .tutor-panel textarea:focus-visible { outline: 2px solid var(--brand); outline-offset: 2px; }
 @media (max-width: 768px) { .reader-mobile-tabs { grid-row: 1; } .tutor-messages { max-height: none; } }
+
+.tutor-model { font-size: 13px; color: var(--ink-2); }

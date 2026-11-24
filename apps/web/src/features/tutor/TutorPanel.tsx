@@ -78,7 +78,7 @@ export function TutorPanel({ context, pageIndex }: { context: Context; pageIndex
       const result = await apiFetch<Answer>('/tutor/ask', { method: 'POST', signal: controller.signal, body: JSON.stringify({ ...context, ...payload, session_id: sessionId }) });
       if (controller.signal.aborted) return;
       setSessionId(result.session_id);
-      setMessages(rows => [...rows, { id: result.message_id, role: 'assistant', content: result.answer, status: result.status, citations: result.citations, limitation: result.limitation }]);
+      setMessages(rows => [...rows, { id: result.message_id, role: 'assistant', content: result.answer, status: result.status, citations: result.citations, limitation: result.limitation, model: result.model }]);
       setQuestion(current => current === payload.question ? '' : current);
       setNotice('Trợ giảng đã trả lời.');
     } catch (error) {
@@ -118,6 +118,7 @@ export function TutorPanel({ context, pageIndex }: { context: Context; pageIndex
         <p className="metadata">{message.role === 'user' ? 'Bạn' : 'Trợ giảng'}</p>
         {message.status === 'source_withdrawn' ? <p className="tutor-neutral">{message.notice ?? 'Nguồn này đã bị thu hồi hoặc thay thế.'}</p> : <>
           <div className={message.status === 'insufficient_evidence' ? 'tutor-neutral' : undefined}><AnswerText text={message.content ?? message.notice ?? ''} citations={message.citations} open={open} /></div>
+          {message.role === 'assistant' && ['ok', 'insufficient_evidence'].includes(message.status) && message.model && <p className="tutor-model">Mô hình: {message.model}</p>}
           {message.limitation && <p className="metadata">{message.limitation}</p>}
           {message.citations.length > 0 && <ol className="tutor-sources" aria-label="Nguồn trích dẫn">{message.citations.map(citation => <li key={citation.id}><CitationButton citation={citation} open={open} /> <span>{citation.material_title} · tr. {citation.page_label ?? citation.page_index + 1}</span><p>{citation.excerpt}</p></li>)}</ol>}
         </>}

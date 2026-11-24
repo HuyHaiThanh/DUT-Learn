@@ -1,3 +1,5 @@
+@import "@fontsource/be-vietnam-pro/vietnamese-800.css";
+@import "@fontsource/be-vietnam-pro/latin-800.css";
 @import "@fontsource/be-vietnam-pro/vietnamese-400.css";
 @import "@fontsource/be-vietnam-pro/latin-400.css";
 @import "@fontsource/be-vietnam-pro/vietnamese-500.css";
@@ -20,6 +22,11 @@ code, pre, kbd, samp { font-variant-ligatures: none; font-feature-settings: "lig
 :root {
   font-family: "Be Vietnam Pro", "Segoe UI", system-ui, sans-serif;
   color-scheme: light;
+  --deep: #073F7A; --sky: #DCEBFA; --sky-2: #EEF5FD;
+  --hl: #FFDD55; --hl-soft: #FFF3C2; --hl-ink: #5C4300;
+  --on-blue: #F1F7FE; --on-blue-2: #EAF3FD; --ink-3: #556479; --line-2: #BFD0E3;
+  --r-xl: 24px; --r-lg: 20px; --r-md: 14px; --r-sm: 10px;
+  --shadow: 0 14px 28px -18px rgba(7,63,122,.45);
   --brand: #0B5CAD; --brand-ink: #084887; --brand-tint: #EAF2FB;
   --ink: #182434; --ink-2: #4A596C; --ground: #F3F5F8; --surface: #FFFFFF;
   --line: #D9E0E8; --control: #7C899A;
@@ -264,3 +271,6 @@ input[aria-invalid="true"] { border: 2px solid var(--danger); }
  .reader-layout [data-mobile-hidden="true"] { display: none; }
  .reader-toolbar { gap: 12px 8px; }
 }
+
+.login-mobile-intro { display: none; }
+@media (max-width: 980px) { .login-intro { margin-bottom: 8px; } .login-mobile-intro { display: block; color: var(--ink-2); margin: 0 0 24px; } }

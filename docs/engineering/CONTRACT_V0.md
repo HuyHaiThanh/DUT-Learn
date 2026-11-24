@@ -155,7 +155,7 @@ Quy trình máy chủ: kiểm quyền → truy xuất top-k trong phạm vi (ưu
 
 **Vết truy xuất (cho đánh giá, không thuộc API).** Hàm truy xuất trả kèm danh sách `(chunk_id, version_id, page_index, rank, cosine, bm25_score|null, rrf_score|null, used_in_prompt)` và thời gian từng bước. Bộ chạy đánh giá ghi mỗi câu một dòng vào `evals/runs/<run_id>/trace.jsonl`, nối bằng `request_id`. Không thêm cột/bảng DB; response cho sinh viên không chứa điểm số. Bộ chạy đánh giá gọi truy xuất với `material_id`/`page_index` = null (không ưu tiên trang đang mở, vẫn trong phạm vi lớp); E-R gọi thẳng hàm truy xuất, không qua LLM, lấy top-10 (MRR@10) trong khi prompt dùng `DUT_TOP_K`; E-G chạy temperature 0, seed 42 và ghi vào cấu hình lượt chạy.
 
-Đọc lịch sử: với người xem là sinh viên, message assistant có citation trỏ tới version không còn hiệu lực trả `content=null`, `status=source_withdrawn` và thông báo thay thế; bản gốc giữ trong DB.
+Đọc lịch sử: `MessageResponse` có `model` (tin của trợ giảng); với người xem là sinh viên, message assistant có citation trỏ tới version không còn hiệu lực trả `content=null`, `status=source_withdrawn` và thông báo thay thế; bản gốc giữ trong DB.
 
 Hybrid (T16): tập tài liệu BM25 = kết quả SQL I2; cache chỉ mục theo `(class_id, content_version)`; RRF k=60; kiểm lại quyền đoạn trước khi đưa vào prompt.
 

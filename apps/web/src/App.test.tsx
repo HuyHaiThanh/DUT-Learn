@@ -22,7 +22,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
   });
 }
 function Path() { const location = useLocation(); return <output aria-label="Đường dẫn">{location.pathname + location.search + location.hash}</output>; }
-function mount(path = '/') {
+function mount(path = '/hoc') {
   const client = new QueryClient({ defaultOptions: { queries: { retry: false }, mutations: { retry: false } } });
   render(<QueryClientProvider client={client}><MemoryRouter initialEntries={[path]}><App /><Path /></MemoryRouter></QueryClientProvider>);
   return client;
@@ -233,4 +233,39 @@ it('không có email hỗ trợ thì bỏ câu liên hệ', () => {
 it('email hỗ trợ lấy từ cấu hình', () => {
   vi.stubEnv('VITE_SUPPORT_EMAIL', 'support@example.test'); vi.stubGlobal('fetch', mockApi()); mount('/login');
   expect(screen.getByRole('link', { name: 'support@example.test' })).toHaveAttribute('href', 'mailto:support@example.test');
+});
+
+it('khách thấy trang chủ ngay, 401 không chuyển hướng và chỉ gọi auth/me', async () => {
+  const fetchMock = vi.fn(async (path: string) => { expect(path).toBe('/api/auth/me'); return response({}, 401); });
+  vi.stubGlobal('fetch', fetchMock); mount('/');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đọc giáo trình, hỏi trợ giảng, mở đúng trang để kiểm chứng');
+  await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
+  await act(async () => {});
+  expect(screen.getByLabelText('Đường dẫn')).toHaveTextContent(/^\/$/);
+  expect(screen.queryByRole('alert')).not.toBeInTheDocument();
+  expect(fetchMock.mock.calls[0][0]).toBe('/api/auth/me');
+});
+it('trang chủ không chờ auth/me và đổi liên kết khi có phiên', async () => {
+  let resolve!: (value: Response) => void;
+  vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(done => { resolve = done; })));
+  mount('/');
+  expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
+  expect(screen.getAllByRole('link', { name: 'Đăng nhập' })).toHaveLength(2);
+  await act(async () => { resolve(response(student)); });
+  const links = await screen.findAllByRole('link', { name: 'Vào trang học tập' });
+  links.forEach(link => expect(link).toHaveAttribute('href', '/hoc'));
+  expect(screen.queryByRole('link', { name: 'Đăng nhập' })).not.toBeInTheDocument();
+});
+it('trang đăng nhập có liên kết về trang chủ', () => {
+  vi.stubGlobal('fetch', mockApi()); mount('/login');
+  expect(screen.getByRole('link', { name: '← Trang chủ' })).toHaveAttribute('href', '/');
+});
+
+it('nút xem mẫu cuộn và đưa focus đến tiêu đề ví dụ', () => {
+  vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {}))); mount('/');
+  const heading = screen.getByRole('heading', { name: 'Thử kiểm chứng một câu trả lời' });
+  const scroll = vi.fn(); heading.scrollIntoView = scroll;
+  fireEvent.click(screen.getByRole('button', { name: 'Xem một câu trả lời mẫu' }));
+  expect(scroll).toHaveBeenCalledWith({ block: 'start' });
+  expect(heading).toHaveFocus();
 });

@@ -1,13 +1,13 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate, useOutletContext } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/api/client';
-import type { Me } from '@/api/types';
 import { homePath, isUnauthorized, useMe } from '@/features/auth';
 import { Brand } from '@/components/Brand';
 import { Chevron } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import { Landing } from '@/pages/Landing';
 import { Login } from '@/pages/Login';
 import { Classes } from '@/pages/Classes';
 import { ClassPage } from '@/pages/ClassPage';
@@ -50,11 +50,10 @@ function Shell() {
     <main id="main-content" tabIndex={-1} className="page-content">{logout.isError && !isUnauthorized(logout.error) && <p role="alert" className="form-error">Không thể đăng xuất. Vui lòng thử lại từ menu người dùng.</p>}<Outlet context={user} /></main>
   </div>;
 }
-function HomeRedirect() { return <Navigate to={homePath(useOutletContext<Me>())} replace />; }
 function NotFound() {
   const me = useMe();
   return <main className="standalone-page"><Brand /><div className="state-panel"><p className="metadata">404</p><h1>Không tìm thấy trang</h1><p>Đường dẫn này không tồn tại hoặc đã được thay đổi.</p><Button asChild><Link to={me.data ? homePath(me.data) : '/'}>Về trang chủ</Link></Button></div></main>;
 }
 export function App() {
-  return <Routes><Route path="/login" element={<Login />} /><Route element={<Shell />}><Route index element={<HomeRedirect />} /><Route path="/hoc" element={<Classes role="student" />} /><Route path="/giang-day" element={<Classes role="lecturer" />} /><Route path="/quan-tri" element={<AdminLayout />}><Route index element={<Navigate to="nguoi-dung" replace />} /><Route path="nguoi-dung" element={<Users />} /><Route path="hoc-phan" element={<Courses />} /><Route path="lop-hoc-phan" element={<AdminClasses />} /><Route path="lop-hoc-phan/:classId" element={<Members />} /></Route><Route path="/lop/:classId" element={<ClassPage />} /><Route path="/doc/:versionId" element={<Reader />} /></Route><Route path="*" element={<NotFound />} /></Routes>;
+  return <Routes><Route path="/" element={<Landing />} /><Route path="/login" element={<Login />} /><Route element={<Shell />}><Route path="/hoc" element={<Classes role="student" />} /><Route path="/giang-day" element={<Classes role="lecturer" />} /><Route path="/quan-tri" element={<AdminLayout />}><Route index element={<Navigate to="nguoi-dung" replace />} /><Route path="nguoi-dung" element={<Users />} /><Route path="hoc-phan" element={<Courses />} /><Route path="lop-hoc-phan" element={<AdminClasses />} /><Route path="lop-hoc-phan/:classId" element={<Members />} /></Route><Route path="/lop/:classId" element={<ClassPage />} /><Route path="/doc/:versionId" element={<Reader />} /></Route><Route path="*" element={<NotFound />} /></Routes>;
 }

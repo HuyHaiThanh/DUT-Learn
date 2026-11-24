@@ -66,6 +66,7 @@ class MessageResponse(BaseModel):
     created_at: datetime
     citations: list[CitationResponse]
     notice: str | None = None
+    model: str | None = None
 
 
 class CitationOpenResponse(BaseModel):
