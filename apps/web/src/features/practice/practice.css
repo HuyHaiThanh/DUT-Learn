@@ -1,0 +1,18 @@
+.practice-page { min-width: 0; }
+.practice-card { margin-block: 1rem; padding: 1rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--card); min-width: 0; overflow-wrap: anywhere; }
+.practice-page summary { cursor: pointer; padding-block: .75rem; font-weight: 600; }
+.practice-preview { display: -webkit-box; -webkit-line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden; white-space: pre-wrap; }
+.practice-labels, .practice-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .5rem; margin-block: .75rem; }
+.practice-ai { color: var(--ai, var(--foreground)); }
+.practice-stem { white-space: pre-wrap; overflow-wrap: anywhere; }
+.practice-stem code { font-family: var(--font-mono, monospace); }
+.practice-stem pre { max-width: 100%; overflow-x: auto; white-space: pre; }
+.practice-radio { display: flex; align-items: center; gap: .75rem; min-height: 44px; padding: .5rem; cursor: pointer; }
+.practice-page fieldset, .practice-form fieldset { min-width: 0; margin-bottom: 1rem; }
+.practice-form fieldset { display: grid; gap: 1rem; }
+.practice-option { display: flex; gap: .5rem; align-items: center; min-width: 0; }
+.practice-option .form-field { flex: 1; min-width: 0; }
+.practice-form input:not([type=radio]), .practice-form textarea, .practice-form select, .practice-card textarea { width: 100%; max-width: 100%; min-width: 0; border: 1px solid var(--input); border-radius: var(--radius); padding: .65rem; background: var(--background); color: var(--foreground); }
+.practice-form textarea, .practice-card textarea { min-height: 100px; resize: vertical; }
+.practice-result { margin-block: 1rem; border-left: 3px solid var(--primary); padding-left: 1rem; }
+.practice-result .row-title { display: flex; align-items: center; gap: .5rem; }

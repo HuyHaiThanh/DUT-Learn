@@ -20,6 +20,7 @@ from app.db import get_db
 from app.errors import error_response, http_error, validation_error
 from app.ingest.worker import IngestWorker
 from app.materials.router import router as materials_router
+from app.practice.router import router as practice_router
 from app.progress.router import router as progress_router
 from app.rag.llm import register_llm_errors
 from app.tutor.router import router as tutor_router
@@ -47,6 +48,7 @@ app.include_router(courses_router)
 app.include_router(materials_router)
 app.include_router(tutor_router)
 app.include_router(progress_router)
+app.include_router(practice_router)
 logger = logging.getLogger(__name__)
 
 
