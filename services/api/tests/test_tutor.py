@@ -149,6 +149,9 @@ def test_answer_citations_history_and_open(tutor, actor):
         assert opened.json()["material_id"] == citation["material_id"]
     history = tutor.messages(data["session_id"]).json()
     assert [m["role"] for m in history] == ["user", "assistant"]
+    assert history[0]["model"] is None
+    stored_message = tutor.db.get(ChatMessage, UUID(data["message_id"]))
+    assert history[1]["model"] == stored_message.model == data["model"]
     listed = tutor.client.get(
         "/api/tutor/sessions", params={"class_id": str(tutor.classes[0].id)}
     ).json()

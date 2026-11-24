@@ -7,11 +7,11 @@ export interface Citation {
 }
 export interface Message {
   id: string; role: string; content: string | null; status: string;
-  citations: Citation[]; notice?: string | null; limitation?: string | null;
+  model?: string | null; citations: Citation[]; notice?: string | null; limitation?: string | null;
 }
 export interface Answer {
   session_id: string; message_id: string; status: string; answer: string;
-  citations: Citation[]; limitation: string | null;
+  model: string; citations: Citation[]; limitation: string | null;
 }
 export interface Context { class_id: string; material_id: string }
 export interface Position extends Context {

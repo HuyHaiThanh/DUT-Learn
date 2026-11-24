@@ -40,12 +40,14 @@ function PdfPage({ versionId, page, zoom, onError }: { versionId: string; page: 
     observer.observe(element);
     return () => observer.disconnect();
   }, []);
+  const [document, setDocument] = useState<{ versionId: string; pdf: import('pdfjs-dist').PDFDocumentProxy } | null>(null);
+  const errorHandler = useRef(onError);
+  errorHandler.current = onError;
   useEffect(() => {
     const controller = new AbortController();
     let disposed = false;
     let task: import('pdfjs-dist').PDFDocumentLoadingTask | undefined;
-    let render: import('pdfjs-dist').RenderTask | undefined;
-    async function draw() {
+    async function load() {
       setLoading(true);
       try {
         const pdfjs = await import('pdfjs-dist');
@@ -57,9 +59,25 @@ function PdfPage({ versionId, page, zoom, onError }: { versionId: string; page: 
         const bytes = new Uint8Array(await response.arrayBuffer());
         if (disposed) return;
         task = pdfjs.getDocument({ data: bytes });
-        const document = await task.promise;
-        if (disposed) return;
-        const pdfPage = await document.getPage(page);
+        const pdf = await task.promise;
+        if (!disposed) setDocument({ versionId, pdf });
+      } catch (error) { if (!disposed) errorHandler.current(error instanceof Error ? error : new Error('Không thể hiển thị PDF.')); }
+    }
+    void load();
+    return () => {
+      disposed = true; controller.abort();
+      // pdf.js 6 releases the document and worker through its loading task.
+      void task?.destroy();
+    };
+  }, [versionId]);
+  useEffect(() => {
+    if (!document || document.versionId !== versionId) return;
+    let disposed = false;
+    let render: import('pdfjs-dist').RenderTask | undefined;
+    async function draw() {
+      setLoading(true);
+      try {
+        const pdfPage = await document!.pdf.getPage(page);
         if (disposed || !canvas.current) return;
         const base = pdfPage.getViewport({ scale: 1 });
         const viewport = pdfPage.getViewport({ scale: width / base.width * zoom });
@@ -71,11 +89,11 @@ function PdfPage({ versionId, page, zoom, onError }: { versionId: string; page: 
         render = pdfPage.render({ canvas: canvas.current, viewport, transform: pixelRatio === 1 ? undefined : [pixelRatio, 0, 0, pixelRatio, 0, 0] });
         await render.promise;
         if (!disposed) setLoading(false);
-      } catch (error) { if (!disposed) onError(error instanceof Error ? error : new Error('Không thể hiển thị PDF.')); }
+      } catch (error) { if (!disposed) errorHandler.current(error instanceof Error ? error : new Error('Không thể hiển thị PDF.')); }
     }
     void draw();
-    return () => { disposed = true; controller.abort(); render?.cancel(); void task?.destroy(); };
-  }, [versionId, page, zoom, width, onError]);
+    return () => { disposed = true; render?.cancel(); };
+  }, [document, versionId, page, zoom, width]);
   return <div ref={container} className="pdf-viewport" aria-busy={loading}>{loading && <p role="status">Đang vẽ trang PDF…</p>}<canvas ref={canvas} aria-label={`Trang PDF ${page}`} role="img" /></div>;
 }
 
@@ -102,10 +120,10 @@ export function Reader() {
   const error = query.error ?? pdfError;
   const context = useQuery({ queryKey: ['reader-context', versionId], queryFn: ({ signal }) => readerContext(versionId, signal), retry: false, gcTime: 0 });
   const positionError = useReadingPosition(context.data, versionId, page - 1, !!query.data && !error && !query.isFetching);
-  // Keep the last known page count while the next page loads, so navigation and the "/ N" label do not reset.
-  const [knownPage, setKnownPage] = useState({ versionId: '', count: 0 });
+  // Keep PDF mounted and retain navigation while the next page text loads.
+  const [knownPage, setKnownPage] = useState({ versionId: '', count: 0, kind: '' });
   const knownCount = knownPage.versionId === versionId ? knownPage.count : 0;
-  useEffect(() => { if (query.data) setKnownPage({ versionId, count: query.data.count }); }, [query.data, versionId]);
+  useEffect(() => { if (query.data) setKnownPage({ versionId, count: query.data.count, kind: query.data.kind }); }, [query.data, versionId]);
   const count = query.data?.count ?? knownCount;
   function navigate(next: number) {
     if (next < 1 || next > count || next === page) return;
@@ -141,8 +159,8 @@ export function Reader() {
     {data && context.isError && <p role="alert">Không tải được ngữ cảnh trợ giảng. <Button variant="outline" onClick={() => void context.refetch()}>Thử lại trợ giảng</Button></p>}
     {positionError != null && !isUnauthorized(positionError) && <p role="status">Chưa lưu được vị trí đọc gần nhất.</p>}
     <ReaderLayout citationLocation={params.has('hl') ? location.key : undefined} assistant={context.data && (data || knownCount > 0) ? <TutorPanel key={context.data.material_id} context={context.data} pageIndex={page - 1} /> : undefined}>
+      {(data?.kind ?? (knownPage.versionId === versionId ? knownPage.kind : null)) === 'pdf' && <PdfPage key={versionId} versionId={versionId} page={page} zoom={zoom} onError={setPdfError} />}
       {!data ? <p role="status">Đang tải tài liệu…</p> : <>
-        {data.kind === 'pdf' && <PdfPage key={versionId} versionId={versionId} page={page} zoom={zoom} onError={setPdfError} />}
         <section className="reader-text-panel" aria-label={data.kind === 'pdf' ? 'Đoạn được trích' : 'Văn bản trang'}>{data.kind === 'pdf' && <h2>Đoạn được trích</h2>}<p className="metadata">Trang {data.page_label}</p><pre className="reader-text" style={{ fontSize: `${18 * (data.kind === 'pdf' ? 1 : zoom)}px` }}><HighlightedText text={data.text} highlight={params.get('hl')} /></pre></section>
       </>}
     </ReaderLayout>

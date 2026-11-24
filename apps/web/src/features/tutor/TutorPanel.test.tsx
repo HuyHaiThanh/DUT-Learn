@@ -5,7 +5,7 @@ import { TutorPanel } from './TutorPanel';
 import type { Answer, Citation } from './api';
 
 const citation: Citation = { id: 'cite1', ordinal: 1, material_id: 'm1', material_title: 'Giáo trình C', version_id: 'v1', page_index: 1, page_label: 'ii', excerpt: 'Một đoạn nguồn.' };
-const answer: Answer = { session_id: 's1', message_id: 'a1', status: 'ok', answer: 'Giải thích [1]. [9]\n```c\n#include <stdio.h>\na[i] = x < y && y > 0; // [1]\n```\n`[1]` a[1]', citations: [citation], limitation: null };
+const answer: Answer = { model: 'test-model', session_id: 's1', message_id: 'a1', status: 'ok', answer: 'Giải thích [1]. [9]\n```c\n#include <stdio.h>\na[i] = x < y && y > 0; // [1]\n```\n`[1]` a[1]', citations: [citation], limitation: null };
 const response = (body: unknown, status = 200) => new Response(JSON.stringify(body), { status });
 function Path() { const location = useLocation(); return <output data-testid="path">{location.pathname + location.search}</output>; }
 function setup(options: { ask?: () => Promise<Response>; open?: () => Promise<Response>; sessions?: unknown[]; messages?: unknown[] } = {}) {
@@ -149,4 +149,16 @@ it('lịch sử đang tải có thể bắt đầu mới và bỏ kết quả l�
   await act(async () => { resolve(response([{ id: 'old', material_id: 'm1', created_at: '2026' }])); });
   expect(screen.queryByText('Đang tải lịch sử…')).not.toBeInTheDocument();
   expect(within(screen.getByRole('region', { name: 'Trợ giảng' })).getByLabelText('Câu hỏi cho trợ giảng')).toBeInTheDocument();
+});
+
+it.each(['ok', 'insufficient_evidence'])('hiện model từ lịch sử và câu trả lời mới: %s', async status => {
+  setup({ sessions: [{ id: 's1', material_id: 'm1', created_at: '2026-11-22' }], messages: [{ id: 'a0', role: 'assistant', content: 'Cũ', status, model: 'saved-model', citations: [] }], ask: async () => response({ ...answer, status }) });
+  expect(await screen.findByText('Mô hình: saved-model')).toBeInTheDocument();
+  type(); submit();
+  expect(await screen.findByText('Mô hình: test-model')).toBeInTheDocument();
+});
+it.each([undefined, null, ''])('không đoán model khi thiếu: %s', async model => {
+  setup({ sessions: [{ id: 's1', material_id: 'm1', created_at: '2026-11-22' }], messages: [{ id: 'a0', role: 'assistant', content: 'Cũ', status: 'ok', model, citations: [] }] });
+  await ready();
+  expect(screen.queryByText(/Mô hình:/)).not.toBeInTheDocument();
 });

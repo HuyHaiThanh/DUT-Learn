@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { useLocation, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { apiFetch, ApiError } from '@/api/client';
 import type { Me } from '@/api/types';
 import { homePath } from '@/features/auth';
@@ -61,8 +61,10 @@ export function Login() {
     <main className="login-form-side" id="main-content">
       <Brand />
       <div className="login-content">
+        <Link to="/">← Trang chủ</Link>
         <h1>Đăng nhập</h1>
         <p className="login-intro">Học liệu và trợ giảng theo lớp học phần, Khoa Công nghệ Thông tin.</p>
+        <p className="login-mobile-intro">Đọc giáo trình, hỏi trợ giảng và mở đúng đoạn nguồn để kiểm chứng.</p>
         <form className="login-form" aria-busy={login.isPending} onSubmit={e => {
           e.preventDefault();
           if (blocked || lockedUntil > Date.now()) return;

@@ -314,6 +314,7 @@ def list_messages(db: Session, user: User, session_id: UUID) -> list[MessageResp
             MessageResponse(
                 id=message.id,
                 role=message.role,
+                model=message.model if message.role == "assistant" else None,
                 mode=message.mode,
                 content=None if withdrawn else message.content,
                 status="source_withdrawn" if withdrawn else message.status,
