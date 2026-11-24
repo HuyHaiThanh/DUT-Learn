@@ -218,9 +218,7 @@ def test_idempotency(db_client, data):
 def test_draft_refreshes_criteria_snapshot(db_client, data):
     id, version, revision = seeded(db_client, data)
     write(db_client, "PATCH", f"/assignments/{id}", {"criteria": "Updated criteria"})
-    saved = write(
-        db_client, "POST", f"/submission-versions/{version}/grades", {"grade": 8.5}
-    )
+    saved = write(db_client, "POST", f"/submission-versions/{version}/grades", {"grade": 8.5})
     assert saved["revision_id"] == revision
     published = write(db_client, "POST", f"/grade-revisions/{revision}/publish")
     assert published["criteria_snapshot"] == "Updated criteria"
