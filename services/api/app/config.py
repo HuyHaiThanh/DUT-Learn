@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import Field
+from pydantic import Field, SecretStr
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -13,6 +13,10 @@ class Settings(BaseSettings):
     session_ttl_hours: int = Field(default=12, gt=0)
     cookie_secure: bool = False
     seed_password: str = "dutlearn-dev"
+    # "ollama" (default, local model used for all experiments) or "openai":
+    # any OpenAI-compatible chat API, used only for the hosted demo.
+    llm_provider: Literal["ollama", "openai"] = "ollama"
+    llm_api_key: SecretStr | None = None
     llm_base_url: str = "http://127.0.0.1:11434"
     llm_model: str = "qwen2.5:7b-instruct"
     llm_timeout_s: float = 90
