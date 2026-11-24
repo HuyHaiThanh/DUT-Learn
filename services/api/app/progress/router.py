@@ -8,14 +8,67 @@ from sqlalchemy.dialects.postgresql import insert
 from sqlalchemy.orm import Session
 
 from app.auth.models import User
-from app.courses.models import Class, Course
+from app.courses.models import Class, ClassMember, Course
 from app.db import get_db
-from app.deps import require_user
+from app.deps import class_role, require_class_lecturer, require_class_member, require_user
 from app.materials.models import Chunk, Material, MaterialVersion
 from app.materials.policy import can_read_version
 from app.progress.models import ReadingPosition
+from app.progress.schemas import EventInput, ProgressResponse, StudentProgress
+from app.progress.service import receive_event, student_progress
 
 router = APIRouter(prefix="/api", tags=["reading"])
+
+
+@router.post("/events", status_code=204)
+def post_event(
+    data: EventInput, db: Session = Depends(get_db), user: User = Depends(require_user)
+) -> Response:
+    receive_event(db, user, data)
+    return Response(status_code=204)
+
+
+@router.get("/classes/{class_id}/progress/me", response_model=ProgressResponse)
+def my_progress(
+    response: Response,
+    classroom: Class = Depends(require_class_member),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_user),
+) -> ProgressResponse:
+    if class_role(db, user, classroom.id) != "student":
+        raise HTTPException(403)
+    response.headers["Cache-Control"] = "private, no-store"
+    return student_progress(db, classroom.id, user.id)
+
+
+@router.get("/classes/{class_id}/progress", response_model=list[StudentProgress])
+def class_progress(
+    response: Response,
+    classroom: Class = Depends(require_class_lecturer),
+    db: Session = Depends(get_db),
+) -> list[StudentProgress]:
+    response.headers["Cache-Control"] = "private, no-store"
+    students = db.scalars(
+        select(User)
+        .join(ClassMember)
+        .where(
+            ClassMember.class_id == classroom.id,
+            ClassMember.role == "student",
+        )
+        .order_by(User.full_name, User.id)
+    )
+    rows = []
+    for student in students:
+        progress = student_progress(db, classroom.id, student.id)
+        rows.append(
+            StudentProgress(
+                **progress.model_dump(),
+                user_id=student.id,
+                full_name=student.full_name,
+                last_activity_at=progress.activity.last_activity_at,
+            )
+        )
+    return rows
 
 
 class PositionInput(BaseModel):

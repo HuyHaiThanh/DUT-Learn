@@ -15,6 +15,7 @@ from app.deps import class_role, require_class_member
 from app.errors import APIError
 from app.materials.models import Chunk, Material, MaterialVersion
 from app.materials.policy import can_read_version
+from app.progress.events import record_event
 from app.rag.llm import LLMClient, LLMError
 from app.rag.retriever import RetrievalResult, Retriever
 from app.rag.scope import versions_still_valid
@@ -236,6 +237,9 @@ def ask(
             request_id=request_id,
         )
     )
+    if error is None:
+        # Counts refusals too: asking is learning activity, not answer quality.
+        record_event(db, user.id, data.class_id, "question_asked", "chat_message", assistant.id)
     db.commit()
     timings["total"] = (perf_counter() - started) * 1000
     return AskOutcome(response, retrieval, timings, tokens, prompt_eval_count, error)

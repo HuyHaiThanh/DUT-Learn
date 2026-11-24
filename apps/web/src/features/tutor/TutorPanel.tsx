@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { ApiError, apiFetch } from '@/api/client';
 import { isUnauthorized } from '@/features/auth';
 import { LoginRedirect } from '@/components/feedback';
+import { sendEvent } from '@/features/events';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { AnswerText, CitationButton } from './AnswerText';
@@ -95,7 +96,7 @@ export function TutorPanel({ context, pageIndex }: { context: Context; pageIndex
     setNotice('Đang mở nguồn…');
     try {
       const source = await apiFetch<{ version_id: string; page_index: number; char_start: number; char_end: number }>(`/citations/${citation.id}/open`, { signal: controller.signal, cache: 'no-store' });
-      if (!controller.signal.aborted && currentGeneration === generation.current) { setNotice(''); navigate(`/doc/${source.version_id}?page=${source.page_index + 1}&hl=${source.char_start}-${source.char_end}`); }
+      if (!controller.signal.aborted && currentGeneration === generation.current) { void sendEvent(context.class_id, 'citation_opened', citation.id); setNotice(''); navigate(`/doc/${source.version_id}?page=${source.page_index + 1}&hl=${source.char_start}-${source.char_end}`); }
     } catch (error) {
       if (!controller.signal.aborted) { setUnauthorized(isUnauthorized(error)); setNotice(error instanceof ApiError && error.status === 410 ? 'Nguồn này đã bị thu hồi hoặc thay thế.' : 'Không kết nối được máy chủ.'); }
     }
