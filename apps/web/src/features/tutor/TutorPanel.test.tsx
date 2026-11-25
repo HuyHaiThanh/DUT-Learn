@@ -25,7 +25,51 @@ function setup(options: { ask?: () => Promise<Response>; open?: () => Promise<Re
 async function ready() { await waitFor(() => expect(screen.queryByText('Đang tải lịch sử…')).not.toBeInTheDocument()); }
 function type(value = 'Giải thích vòng lặp?') { fireEvent.change(screen.getByLabelText('Câu hỏi cho trợ giảng'), { target: { value } }); }
 function submit() { fireEvent.click(screen.getByRole('button', { name: 'Hỏi' })); }
-afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); });
+afterEach(() => { vi.unstubAllGlobals(); vi.useRealTimers(); vi.restoreAllMocks(); });
+
+it('keeps the composer accessible, on two initial rows, and grows only up to six rows', async () => {
+  setup(); await ready();
+  const input = screen.getByLabelText<HTMLTextAreaElement>('Câu hỏi cho trợ giảng');
+  expect(input).toHaveAttribute('rows', '2');
+  expect(document.querySelector(`label[for="${input.id}"]`)).toHaveClass('sr-only');
+  expect(screen.getByText('0/2000')).toHaveTextContent('0/2000');
+  expect(screen.getByRole('button', { name: 'Hỏi' }).parentElement).toHaveTextContent('0/2000 · Mỗi câu được trả lời độc lập · Ctrl+Enter để gửi');
+  input.style.lineHeight = '20px'; input.style.padding = '0px'; input.style.borderWidth = '0px';
+  let height = 80;
+  Object.defineProperty(input, 'scrollHeight', { configurable: true, get: () => height });
+  type('Hai dòng và thêm một dòng');
+  expect(input.style.height).toBe('80px');
+  height = 500; type('Câu hỏi dài hơn');
+  expect(input.style.height).toBe('120px');
+  expect(input.style.overflowY).toBe('auto');
+  height = 40; type('Ngắn');
+  expect(input.style.height).toBe('40px');
+  expect(input.style.overflowY).toBe('hidden');
+});
+
+it.each([100, 700])('scrolls to the question/waiting card, then to the top of a %spx answer', async answerHeight => {
+  let resolve!: (response: Response) => void;
+  setup({ ask: () => new Promise(r => { resolve = r; }) }); await ready();
+  const list = screen.getByLabelText('Luồng hỏi đáp');
+  list.style.padding = '0px';
+  Object.defineProperty(list, 'clientHeight', { configurable: true, value: 400 });
+  Object.defineProperty(list, 'scrollHeight', { configurable: true, value: 1000 });
+  vi.spyOn(HTMLElement.prototype, 'getBoundingClientRect').mockImplementation(function (this: HTMLElement) {
+    const isAnswer = this.dataset.lastAnswer === 'true';
+    const top = isAnswer ? 600 - list.scrollTop : 100;
+    return { top, bottom: top + (isAnswer ? answerHeight : 400), left: 0, right: 400, width: 400, height: isAnswer ? answerHeight : 400, x: 0, y: top, toJSON: () => ({}) };
+  });
+  type(); submit();
+  expect(list.scrollTop).toBe(1000);
+  expect(within(list).getByText('Đang tìm trong học liệu và soạn câu trả lời…')).toBeInTheDocument();
+  await act(async () => { resolve(response(answer)); });
+  expect(list.scrollTop).toBe(500);
+  expect(list.querySelector<HTMLElement>('.tutor-scroll-space')?.style.height).toBe(`${Math.max(0, 400 - answerHeight)}px`);
+  const announcement = screen.getByText('Trợ giảng đã trả lời.');
+  expect(announcement).toHaveClass('sr-only');
+  expect(announcement).toHaveAttribute('aria-live', 'polite');
+  expect(screen.getByLabelText('Câu hỏi cho trợ giảng')).toHaveValue('');
+});
 
 it('nút và Ctrl+Enter gửi đúng dữ liệu, Enter xuống dòng, giữ session và mode', async () => {
   const { fetchMock } = setup(); await ready(); type();
@@ -37,7 +81,7 @@ it('nút và Ctrl+Enter gửi đúng dữ liệu, Enter xuống dòng, giữ ses
   expect(JSON.parse(requests[0][1]!.body as string)).toEqual({ class_id: 'c1', material_id: 'm1', page_index: 2, question: 'Giải thích vòng lặp?', mode: 'answer', session_id: null });
   expect(new Headers(requests[0][1]!.headers).get('X-DUT-CSRF')).toBe('1');
   type('Hướng dẫn vòng lặp');
-  fireEvent.click(screen.getByRole('button', { name: 'Gợi ý từng bước' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Dẫn dắt từng bước' }));
   fireEvent.keyDown(screen.getByLabelText('Câu hỏi cho trợ giảng'), { key: 'Enter', ctrlKey: true });
   await waitFor(() => expect(fetchMock.mock.calls.filter(([path]) => path === '/api/tutor/ask')).toHaveLength(2));
   requests = fetchMock.mock.calls.filter(([path]) => path === '/api/tutor/ask');
@@ -50,7 +94,7 @@ it('khóa gửi trùng, hiện câu hỏi ngay, chờ 3 giây và hủy abort b�
   await ready(); vi.useFakeTimers(); type(); submit();
   expect(within(screen.getByLabelText('Luồng hỏi đáp')).getByText('Giải thích vòng lặp?')).toBeInTheDocument();
   expect(screen.getByRole('button', { name: 'Hỏi' })).toBeDisabled();
-  expect(screen.getByText('Trợ giảng đang đọc học liệu…')).toHaveAttribute('aria-live', 'polite');
+  expect(screen.getByText('Đang tìm trong học liệu và soạn câu trả lời…').closest('[aria-live]')).toHaveAttribute('aria-live', 'polite');
   fireEvent.keyDown(screen.getByLabelText('Câu hỏi cho trợ giảng'), { key: 'Enter', ctrlKey: true });
   expect(fetchMock.mock.calls.filter(([path]) => path === '/api/tutor/ask')).toHaveLength(1);
   await act(async () => { vi.advanceTimersByTime(3000); });
@@ -66,9 +110,9 @@ it('khóa gửi trùng, hiện câu hỏi ngay, chờ 3 giây và hủy abort b�
 it.each(['v1', 'v2'])('trích dẫn mở %s đúng URL, chỉ marker hợp lệ ngoài code là nút', async versionId => {
   const { fetchMock, container } = setup({ open: async () => response({ version_id: versionId, page_index: 4, char_start: 2, char_end: 18 }) });
   await ready(); type(); submit();
-  const buttons = await screen.findAllByRole('button', { name: 'Mở nguồn 1: Giáo trình C, trang ii' });
+  const buttons = await screen.findAllByRole('button', { name: 'Nguồn 1, trang ii' });
   expect(buttons).toHaveLength(2); // Inline marker + source list.
-  expect(screen.queryByRole('button', { name: /Mở nguồn 9/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Nguồn 9, trang/ })).not.toBeInTheDocument();
   expect(container.querySelector('pre code')!.textContent).toContain('#include <stdio.h>\na[i] = x < y && y > 0; // [1]');
   expect(container.querySelector('pre code button')).toBeNull();
   expect(container.querySelector('script')).toBeNull();
@@ -109,7 +153,7 @@ it.each([
 
 it('410 mở nguồn có thông báo tại chỗ', async () => {
   setup({ open: async () => response({}, 410) }); await ready(); type(); submit();
-  fireEvent.click((await screen.findAllByRole('button', { name: /Mở nguồn 1:/ }))[0]);
+  fireEvent.click((await screen.findAllByRole('button', { name: /Nguồn 1, trang/ }))[0]);
   expect(await screen.findByText('Nguồn này đã bị thu hồi hoặc thay thế.')).toBeInTheDocument();
   expect(screen.getByTestId('path')).toHaveTextContent('/doc/v1');
 });
@@ -119,7 +163,7 @@ it('lịch sử chọn session mới nhất đúng material, source_withdrawn �
   expect(await screen.findByText('Nguồn của câu trả lời đã bị thu hồi.')).toBeInTheDocument();
   expect(fetchMock).toHaveBeenCalledWith('/api/tutor/sessions/recent/messages', expect.anything());
   expect(screen.queryByText('Không được lộ')).not.toBeInTheDocument();
-  expect(screen.queryByRole('button', { name: /Mở nguồn/ })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: /Nguồn/ })).not.toBeInTheDocument();
   fireEvent.click(screen.getByRole('button', { name: 'Cuộc hỏi đáp mới' })); type(); submit();
   await screen.findByText('Trợ giảng đã trả lời.');
   const call = fetchMock.mock.calls.find(([path]) => path === '/api/tutor/ask')!;

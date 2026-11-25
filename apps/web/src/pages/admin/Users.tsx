@@ -1,3 +1,4 @@
+import { StatusPill } from '@/components/StatusPill';
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { adminKeys, createUser, useAdminUsers, type UserCreate } from '@/api/admin';
@@ -34,6 +35,6 @@ export function Users() {
   return <section aria-labelledby="admin-users-heading"><div className="admin-heading"><h2 id="admin-users-heading" className="section-title">Người dùng</h2>{add}</div>
     {notice && <p role="status" className="admin-success">{notice}</p>}
     <QueryState queries={[users]}><div className="admin-toolbar"><Field label="Tìm theo tên hoặc email" type="search" value={search} onChange={e => setSearch(e.target.value)} /><p className="metadata">Lọc trong {users.data?.length ?? 0} người dùng đã tải<br />Không phân biệt hoa thường, có phân biệt dấu.</p></div>
-      {rows.length ? <Table label="Danh sách người dùng" headers={['Họ tên', 'Email', 'Vai trò hệ thống', 'Trạng thái']}>{rows.map(u => <tr key={u.id}><td className="admin-name">{u.full_name}</td><td>{u.email}</td><td>{u.system_role === 'admin' ? 'Quản trị viên' : 'Người dùng'}</td><td><span className={u.is_active ? 'admin-badge success' : 'admin-badge'}>{u.is_active ? 'Đang hoạt động' : 'Đã khóa'}</span></td></tr>)}</Table> : <Empty>{search ? 'Không có người dùng khớp bộ lọc. Thử tên hoặc email khác.' : 'Chưa có người dùng. Chọn “Thêm người dùng” để tạo tài khoản.'}</Empty>}
+      {rows.length ? <Table label="Danh sách người dùng" headers={['Họ tên', 'Email', 'Vai trò hệ thống', 'Trạng thái']}>{rows.map(u => <tr key={u.id}><td className="admin-name">{u.full_name}</td><td>{u.email}</td><td>{u.system_role === 'admin' ? 'Quản trị viên' : 'Người dùng'}</td><td><StatusPill tone={u.is_active ? 'ok' : 'neutral'} icon={u.is_active ? 'check' : 'lock'}>{u.is_active ? 'Đang hoạt động' : 'Đã khóa'}</StatusPill></td></tr>)}</Table> : <Empty>{search ? 'Không có người dùng khớp bộ lọc. Thử tên hoặc email khác.' : 'Chưa có người dùng. Chọn “Thêm người dùng” để tạo tài khoản.'}</Empty>}
     </QueryState></section>;
 }

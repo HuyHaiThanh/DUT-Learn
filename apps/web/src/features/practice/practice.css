@@ -19,3 +19,23 @@
 .practice-card legend { font-size: 16px; font-weight: 600; max-width: 100%; }
 .practice-correct { color: var(--success); }
 .practice-incorrect { color: var(--danger); }
+
+.practice-card { padding: 28px; border-radius: var(--r-xl); }
+.practice-labels { margin-top: 0; margin-bottom: 20px; }
+.practice-card legend, .practice-prompt { font-size: 17px; font-weight: 700; line-height: 1.65; margin-bottom: 16px; }
+.practice-stem pre { font-weight: 400; background: var(--deep); color: var(--on-blue); padding: 18px; border-radius: var(--r-md); font-size: 14px; line-height: 1.8; margin-block: 16px; }
+.practice-stem :not(pre) > code, .practice-radio code { font-family: var(--font-mono); background: var(--sky-2); padding: 2px 4px; border-radius: 4px; font-size: 14px; }
+.practice-radio { padding: 14px; border: 2px solid var(--line); border-radius: var(--r-md); margin-bottom: 10px; gap: 12px; min-height: 60px; }
+.practice-radio:has(input:checked) { border-color: var(--brand); background: var(--sky-2); }
+.practice-radio:has(input:focus-visible) { outline: 3px solid var(--hl); outline-offset: 3px; }
+.practice-radio input { accent-color: var(--brand); width: 18px; height: 18px; flex-shrink: 0; }
+.practice-radio .practice-stem { display: inline; }
+.option-letter { width: 32px; height: 32px; border-radius: 50%; background: var(--sky-2); color: var(--brand); display: grid; place-items: center; font-weight: 800; flex-shrink: 0; }
+.practice-result { padding: 20px; border: 0; border-radius: var(--r-md); }
+.practice-result > p { margin-block: 14px 4px; }
+.practice-result > p:first-child { margin-top: 0; }
+.result-ok { background: var(--ok-soft); }
+.result-bad { background: var(--bad-soft); }
+.result-neutral { background: var(--sky-2); }
+.practice-ai { color: var(--ai); background: var(--ai-soft); }
+@media (max-width: 760px) { .practice-card { padding: 20px 16px; } .practice-radio { gap: 8px; padding: 12px 10px; } }

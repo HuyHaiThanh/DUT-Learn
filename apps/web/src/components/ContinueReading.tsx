@@ -11,10 +11,9 @@ export interface ContinueReadingProps {
 }
 
 // Presentational only. T13 supplies the last readable position and mounts this.
-export function ContinueReading({ to, courseName, title, pageLabel, pageCount, lastOpenedLabel, questionCount }: ContinueReadingProps) {
+export function ContinueReading({ to, courseName, title, pageLabel }: ContinueReadingProps) {
   return <Link to={to} className="continue-reading">
-    <span className="reading-preview" aria-hidden="true"><span>{title}</span><span className="preview-lines" /><span className="preview-highlight" /><span className="preview-lines" /></span>
-    <span className="reading-copy"><span className="metadata">Tiếp tục đọc · {courseName}</span><span className="reading-title">{title} · tr. {pageLabel}</span><span className="metadata">Trang {pageLabel}{pageCount !== undefined && ` / ${pageCount}`} · mở lần cuối {lastOpenedLabel}{questionCount !== undefined && ` · ${questionCount} câu hỏi với trợ giảng`}</span></span>
+    <span className="reading-copy"><span className="reading-eyebrow">Tiếp tục đọc</span><span className="reading-title">{title}</span><span className="metadata">{courseName} · Bạn dừng ở trang {pageLabel}</span></span>
     <span className="reading-action">Đọc tiếp</span>
   </Link>;
 }

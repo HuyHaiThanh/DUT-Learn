@@ -8,6 +8,8 @@ import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isUnauthorized } from '@/features/auth';
+import { Icon } from '@/components/icons';
+import { StatusPill } from '@/components/StatusPill';
 import type { AttemptResult, LecturerQuestion, QuestionBody, StudentQuestion } from './types';
 import './practice.css';
 
@@ -81,10 +83,10 @@ function QuestionActions({ classId, question, lessons }: { classId: string; ques
 export function LecturerPractice({ classId, userId, lessons }: { classId: string; userId: string; lessons: Lesson[] }) {
   const query = useQuery({ queryKey: ['practice', classId, userId, 'lecturer'], queryFn: () => apiFetch<LecturerQuestion[]>(`/classes/${classId}/practice?include_retired=true`), retry: false });
   return <section className="practice-page"><div className="admin-heading"><h2 className="section-title">Luyện tập</h2><QuestionDialog classId={classId} lessons={lessons} /></div>
-    {query.isPending ? <p role="status">Đang tải câu luyện tập…</p> : query.isError ? <><PracticeError error={query.error} /><RetryError retry={() => void query.refetch()} /></> : !query.data.length ? <p className="state-panel">Chưa có câu luyện tập. Chọn “Thêm câu hỏi”.</p> : (['draft', 'published', 'retired'] as const).map(status => <details key={status} open={status !== 'retired'}>
+    {query.isPending ? <p role="status" className="state-panel loading-state"><span className="spinner" aria-hidden="true" />Đang tải câu luyện tập…</p> : query.isError ? <><PracticeError error={query.error} /><RetryError retry={() => void query.refetch()} /></> : !query.data.length ? <p className="state-panel">Chưa có câu luyện tập. Chọn “Thêm câu hỏi”.</p> : (['draft', 'published', 'retired'] as const).map(status => <details key={status} open={status !== 'retired'}>
       <summary>{status === 'draft' ? 'Nháp' : status === 'published' ? 'Đang dùng' : 'Ngừng dùng'}</summary>
       {query.data.filter(q => q.status === status || (status === 'draft' && q.status === 'approved')).map(q => <article className="practice-card" key={q.id}>
-        <h3 className="row-title practice-preview">{q.stem}</h3><div className="practice-labels"><span>{q.kind === 'mcq' ? 'Trắc nghiệm' : 'Tự luận ngắn'}</span><span className={`admin-badge${q.origin === 'ai' ? ' practice-ai' : ''}`}>{q.origin === 'ai' ? 'AI đề xuất' : 'GV soạn'}</span>{q.status === 'approved' && <span className="admin-badge">Đã duyệt</span>}</div>
+        <h3 className="row-title practice-preview"><QuestionStem text={q.stem} /></h3><div className="practice-labels"><span>{q.kind === 'mcq' ? 'Trắc nghiệm' : 'Tự luận ngắn'}</span><StatusPill tone={q.origin === 'ai' ? 'ai' : 'neutral'} icon="clipboard">{q.origin === 'ai' ? 'AI đề xuất' : 'GV soạn'}</StatusPill>{q.status === 'approved' && <StatusPill tone="ok" icon="check">Đã duyệt</StatusPill>}</div>
         <QuestionActions classId={classId} question={q} lessons={lessons} />
       </article>)}
     </details>)}
@@ -93,6 +95,11 @@ export function LecturerPractice({ classId, userId, lessons }: { classId: string
 
 function QuestionStem({ text }: { text: string }) {
   return <div className="practice-stem">{text.split(/(```[\s\S]*?```|`[^`\n]+`)/g).map((part, i) => part.startsWith('```') ? <pre key={i}><code>{part.slice(3, -3).replace(/^[a-zA-Z0-9+#.-]*\n/, '')}</code></pre> : part.startsWith('`') ? <code key={i}>{part.slice(1, -1)}</code> : <span key={i}>{part}</span>)}</div>;
+}
+
+function OptionText({ text }: { text: string }) {
+  const looksLikeCode = /[;*&]/.test(text) && !/[^\x20-\x7e\s]/.test(text);
+  return looksLikeCode && !text.includes('`') ? <code>{text}</code> : <QuestionStem text={text} />;
 }
 
 function StudentCard({ question }: { question: StudentQuestion }) {
@@ -117,16 +124,16 @@ function StudentCard({ question }: { question: StudentQuestion }) {
   }
   function restart() { submission.current = null; setResponse(''); setResult(null); setLocked(false); mutation.reset(); }
   return <article className="practice-card">
-    <p className="metadata">{question.kind === 'mcq' ? 'Trắc nghiệm' : 'Tự luận ngắn'}</p>{question.kind === 'short' && <QuestionStem text={question.stem} />}<p className="metadata" aria-live="polite">Đã làm {Math.max(count, question.my_attempts)} lần</p>
+    <div className="practice-labels"><StatusPill tone="sky" icon="clipboard">{question.kind === 'mcq' ? 'Trắc nghiệm' : 'Tự luận ngắn'}</StatusPill><p className="metadata" aria-live="polite">Đã làm {Math.max(count, question.my_attempts)} lần</p></div>{question.kind === 'short' && <div className="practice-prompt"><QuestionStem text={question.stem} /></div>}
     <form onSubmit={e => { e.preventDefault(); submit(); }} aria-label="Trả lời câu luyện tập">
-      {question.kind === 'mcq' ? <fieldset disabled={locked || mutation.isPending}><legend><QuestionStem text={question.stem} /></legend>{question.options?.map((option, i) => <label className="practice-radio" key={i}><input type="radio" name={id} checked={response === String(i)} onChange={() => setResponse(String(i))} /><span>{option}</span></label>)}</fieldset> : <div className="form-field"><Label htmlFor={id}>Câu trả lời</Label><textarea id={id} required maxLength={5000} disabled={locked || mutation.isPending} value={response} onChange={e => setResponse(e.target.value)} /></div>}
+      {question.kind === 'mcq' ? <fieldset disabled={locked || mutation.isPending}><legend><QuestionStem text={question.stem} /></legend>{question.options?.map((option, i) => <label className="practice-radio" key={i}><input type="radio" name={id} checked={response === String(i)} onChange={() => setResponse(String(i))} /><span className="option-letter" aria-hidden="true">{String.fromCharCode(65 + i)}</span><span><OptionText text={option} /></span></label>)}</fieldset> : <div className="form-field"><Label htmlFor={id}>Câu trả lời</Label><textarea id={id} required maxLength={5000} disabled={locked || mutation.isPending} value={response} onChange={e => setResponse(e.target.value)} /></div>}
       {!result && <Button type="submit" disabled={mutation.isPending || !response.trim()}>{mutation.isPending ? 'Đang nộp…' : 'Nộp'}</Button>}
     </form>
     <PracticeError error={mutation.error} />
-    {result && <div className="practice-result" role="status">
-      <p className={`row-title${result.is_correct === null ? '' : result.is_correct ? ' practice-correct' : ' practice-incorrect'}`}>{result.is_correct === null ? 'Đã ghi nhận câu trả lời' : <><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={result.is_correct ? 'm5 12 4 4L19 6' : 'm6 6 12 12M6 18 18 6'} /></svg>{result.is_correct ? 'Đúng' : 'Sai'}</>}</p>
-      <p>{question.kind === 'mcq' ? 'Đáp án đúng' : 'Đáp án mẫu'}</p><QuestionStem text={question.kind === 'mcq' ? question.options?.[Number(result.answer_key)] ?? result.answer_key : result.answer_key} />
-      <p>Giải thích</p><QuestionStem text={result.explanation} />
+    {result && <div className={`practice-result result-${result.is_correct === null ? 'neutral' : result.is_correct ? 'ok' : 'bad'}`} role="status">
+      <p className={`row-title${result.is_correct === null ? '' : result.is_correct ? ' practice-correct' : ' practice-incorrect'}`}>{result.is_correct === null ? 'Đã ghi nhận câu trả lời' : <><Icon name={result.is_correct ? 'check' : 'close'} />{result.is_correct ? 'Đúng' : 'Chưa đúng'}</>}</p>
+      <p><strong>{question.kind === 'mcq' ? 'Đáp án đúng' : 'Đáp án mẫu'}</strong></p><QuestionStem text={question.kind === 'mcq' ? question.options?.[Number(result.answer_key)] ?? result.answer_key : result.answer_key} />
+      <p><strong>Giải thích</strong></p><QuestionStem text={result.explanation} />
       {question.kind === 'short' && <p>Câu tự luận không chấm tự động; hãy tự đối chiếu với đáp án mẫu.</p>}
     </div>}
     {(result || mutation.isError) && <Button variant="outline" disabled={mutation.isPending} onClick={restart}>Làm lại</Button>}
@@ -136,6 +143,6 @@ function StudentCard({ question }: { question: StudentQuestion }) {
 export function StudentPractice({ classId, userId }: { classId: string; userId: string }) {
   const query = useQuery({ queryKey: ['practice', classId, userId, 'student'], queryFn: () => apiFetch<StudentQuestion[]>(`/classes/${classId}/practice`), retry: false });
   return <section className="practice-page"><h2 className="section-title">Luyện tập</h2>
-    {query.isPending ? <p role="status">Đang tải câu luyện tập…</p> : query.isError ? <><PracticeError error={query.error} /><RetryError retry={() => void query.refetch()} /></> : query.data.length ? query.data.map(q => <StudentCard key={q.id} question={q} />) : <p className="state-panel">Giảng viên chưa công bố câu luyện tập nào.</p>}
+    {query.isPending ? <p role="status" className="state-panel loading-state"><span className="spinner" aria-hidden="true" />Đang tải câu luyện tập…</p> : query.isError ? <><PracticeError error={query.error} /><RetryError retry={() => void query.refetch()} /></> : query.data.length ? query.data.map(q => <StudentCard key={q.id} question={q} />) : <p className="state-panel">Giảng viên chưa công bố câu luyện tập nào.</p>}
   </section>;
 }

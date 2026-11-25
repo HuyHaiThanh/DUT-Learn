@@ -8,7 +8,7 @@ it('hiển thị props và đường đọc tiếp mà không gọi API', () => 
   const fetchMock = vi.fn();
   vi.stubGlobal('fetch', fetchMock);
   render(<MemoryRouter><ContinueReading to="/lop/c1/tai-lieu/m1" courseName="Kỹ thuật lập trình" title="Giáo trình Lập trình căn bản, chương VII" pageLabel="133" pageCount={199} lastOpenedLabel="21:40 hôm qua" questionCount={2} /></MemoryRouter>);
-  expect(screen.getByRole('link', { name: /Tiếp tục đọc · Kỹ thuật lập trình/ })).toHaveAttribute('href', '/lop/c1/tai-lieu/m1');
-  expect(screen.getByText('Trang 133 / 199 · mở lần cuối 21:40 hôm qua · 2 câu hỏi với trợ giảng')).toBeInTheDocument();
+  expect(screen.getByRole('link', { name: /Tiếp tục đọc/ })).toHaveAttribute('href', '/lop/c1/tai-lieu/m1');
+  expect(screen.getByText('Kỹ thuật lập trình · Bạn dừng ở trang 133')).toBeInTheDocument();
   expect(fetchMock).not.toHaveBeenCalled();
 });

@@ -18,6 +18,32 @@ function setup(role: 'student' | 'lecturer', items: StudentQuestion[] | Lecturer
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it('renders C options and backticks as code without revealing answers', async () => {
+  setup('student', [{ ...student, stem: 'Giá trị của `p`?', options: ['int *p = &a;', 'Dùng `p` để đọc'] }]);
+  const option = await screen.findByRole('radio', { name: 'int *p = &a;' });
+  expect(option.closest('label')?.querySelector('code')).toHaveTextContent('int *p = &a;');
+  // jsdom treats <code> as block when computing accessible names and inserts spaces around it.
+  expect(screen.getByRole('group', { name: /^Giá trị của\s*p\s*\?$/ }).querySelector('legend code')).toHaveTextContent('p');
+  expect(screen.getByRole('radio', { name: /^Dùng\s*p\s*để đọc$/ }).closest('label')?.querySelector('code')).toHaveTextContent('p');
+  expect(screen.queryByText('Đáp án đúng')).not.toBeInTheDocument();
+  expect(screen.queryByText('Giải thích')).not.toBeInTheDocument();
+});
+
+it.each(['mcq', 'short'] as const)('renders backticks in %s stems while preserving unmarked seeded code', async kind => {
+  setup('student', [{ ...student, kind, stem: 'Xét `int x = 3;` và int *p = &x;', options: kind === 'mcq' ? student.options : null }]);
+  const stem = (await screen.findByText('int x = 3;')).closest('.practice-stem')!;
+  expect(stem.querySelector('code')).toHaveTextContent('int x = 3;');
+  expect(stem).toHaveTextContent('và int *p = &x;');
+  expect(stem.querySelectorAll('code')).toHaveLength(1);
+  expect(screen.queryByText('Đáp án đúng')).not.toBeInTheDocument();
+});
+
+it('renders backticks in the lecturer question preview', async () => {
+  setup('lecturer', [{ ...lecturer, stem: 'Giá trị của `x`?' }]);
+  const title = await screen.findByRole('heading', { name: /^Giá trị của\s*x\s*\?$/ });
+  expect(title.querySelector('code')).toHaveTextContent('x');
+});
+
 it('GV tạo trắc nghiệm gửi đúng chỉ số đáp án và các trường', async () => {
   const mock = setup('lecturer', []);
   await screen.findByText('Chưa có câu luyện tập. Chọn “Thêm câu hỏi”.');
@@ -44,7 +70,7 @@ it.each([true, false])('SV chỉ thấy kết quả và giải thích sau nộp:
   expect(screen.getByRole('group', { name: '1 + 1?' })).toBeInTheDocument();
   fireEvent.click(screen.getByRole('radio', { name: '2' }));
   fireEvent.click(screen.getByRole('button', { name: 'Nộp' }));
-  expect(await screen.findByText(correct ? 'Đúng' : 'Sai')).toBeInTheDocument();
+  expect(await screen.findByText(correct ? 'Đúng' : 'Chưa đúng')).toBeInTheDocument();
   expect(screen.getByText(result.explanation)).toBeInTheDocument();
   expect(screen.getByText('Đã làm 1 lần')).toBeInTheDocument();
   expect(JSON.parse(String(mock.mock.calls.find(([, init]) => init?.method)?.[1]?.body)).response).toBe('1');

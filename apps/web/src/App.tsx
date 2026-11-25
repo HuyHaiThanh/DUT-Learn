@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
-import { Link, NavLink, Navigate, Outlet, Route, Routes, useNavigate } from 'react-router-dom';
+import { Link, NavLink, Navigate, Outlet, Route, Routes, useLocation, useNavigate } from 'react-router-dom';
 import { apiFetch } from '@/api/client';
 import { homePath, isUnauthorized, useMe } from '@/features/auth';
 import { Brand } from '@/components/Brand';
-import { Chevron } from '@/components/icons';
+import { Chevron, Icon } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
 import { Landing } from '@/pages/Landing';
@@ -28,6 +28,7 @@ function Shell() {
   const [open, setOpen] = useState(false);
   const client = useQueryClient();
   const navigate = useNavigate();
+  const reader = useLocation().pathname.startsWith('/doc/');
   const logout = useMutation({
     mutationFn: () => apiFetch('/auth/logout', { method: 'POST' }),
     onSuccess: async () => { await client.cancelQueries(); client.clear(); navigate('/login', { replace: true }); },
@@ -35,22 +36,22 @@ function Shell() {
   });
   if (isUnauthorized(me.error)) return <LoginRedirect />;
   if (me.isError) return <main className="standalone-page"><h1>Không thể tải tài khoản</h1><RetryError retry={() => void me.refetch()} /></main>;
-  if (me.isPending) return <main className="standalone-page"><p role="status" className="state-panel">Đang tải tài khoản…</p></main>;
+  if (me.isPending) return <main className="standalone-page"><p role="status" className="state-panel"><span className="spinner" aria-hidden="true" />Đang tải tài khoản…</p></main>;
   const user = me.data;
   const student = user.classes.some(c => c.role === 'student');
   const lecturer = user.classes.some(c => c.role === 'lecturer');
   const initials = user.full_name.trim().split(/\s+/).filter((_, i, names) => i === 0 || i === names.length - 1).map(name => name[0]).join('');
-  return <div className="app-shell">
+  return <div className={`app-shell${reader ? ' reader-shell' : ''}`}>
     <a href="#main-content" className="skip-link">Bỏ qua đến nội dung chính</a>
-    <header className="topbar"><Link to={homePath(user)} className="brand-link"><Brand /></Link>
-      <button type="button" className="mobile-toggle" aria-label="Menu" aria-expanded={open} aria-controls="main-nav" onClick={() => setOpen(!open)}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M4 6h16M4 12h16M4 18h16" /></svg></button>
+    {!reader && <header className="topbar"><Link to={homePath(user)} className="brand-link"><Brand /></Link>
+      <button type="button" className="mobile-toggle" aria-label="Menu" aria-expanded={open} aria-controls="main-nav" onClick={() => setOpen(!open)}><Icon name="menu" /></button>
       <nav id="main-nav" className="main-nav" data-open={open} aria-label="Điều hướng chính" onKeyDown={e => { if (e.key === 'Escape') { setOpen(false); document.querySelector<HTMLButtonElement>('.mobile-toggle')?.focus(); } }}>
         {student && <NavLink className="nav-link" to="/hoc" onClick={() => setOpen(false)}>Học tập</NavLink>}
         {lecturer && <NavLink className="nav-link" to="/giang-day" onClick={() => setOpen(false)}>Giảng dạy</NavLink>}
         {user.system_role === 'admin' && <NavLink className="nav-link" to="/quan-tri" onClick={() => setOpen(false)}>Quản trị</NavLink>}
       </nav>
       <div className="user-menu"><DropdownMenu><DropdownMenuTrigger asChild><Button variant="outline" className="user-trigger" aria-haspopup="menu"><span className="user-initials" aria-hidden="true">{initials}</span><span className="user-name">{user.full_name}</span><Chevron down /></Button></DropdownMenuTrigger><DropdownMenuContent align="end"><p className="break-all px-3 py-2 text-sm text-muted-foreground">{user.email}</p><DropdownMenuItem disabled={logout.isPending} onSelect={() => logout.mutate()}>{logout.isPending ? 'Đang đăng xuất…' : 'Đăng xuất'}</DropdownMenuItem></DropdownMenuContent></DropdownMenu></div>
-    </header>
+    </header>}
     <main id="main-content" tabIndex={-1} className="page-content">{logout.isError && !isUnauthorized(logout.error) && <p role="alert" className="form-error">Không thể đăng xuất. Vui lòng thử lại từ menu người dùng.</p>}<Outlet context={user} /></main>
   </div>;
 }

@@ -9,7 +9,7 @@ export function QueryState({ queries, children }: { queries: UseQueryResult<unkn
   if (queries.some(q => q.error instanceof ApiError && q.error.status === 401)) return <LoginRedirect />;
   if (queries.some(q => q.error instanceof ApiError && q.error.status === 403)) return <p role="alert" className="state-panel">Bạn không có quyền quản trị.</p>;
   if (queries.some(q => q.isError)) return <RetryError homeTo="/quan-tri" retry={() => { queries.forEach(q => { void q.refetch(); }); }} />;
-  if (queries.some(q => q.isPending)) return <p role="status" className="state-panel">Đang tải dữ liệu…</p>;
+  if (queries.some(q => q.isPending)) return <p role="status" className="state-panel"><span className="spinner" aria-hidden="true" />Đang tải dữ liệu…</p>;
   return children;
 }
 export function MutationError({ error, conflict }: { error: Error | null; conflict: string }) {
