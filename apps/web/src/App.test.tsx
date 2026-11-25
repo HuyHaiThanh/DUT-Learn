@@ -273,7 +273,7 @@ it('email hỗ trợ lấy từ cấu hình', () => {
 it('khách thấy trang chủ ngay, 401 không chuyển hướng và chỉ gọi auth/me', async () => {
   const fetchMock = vi.fn(async (path: string) => { expect(path).toBe('/api/auth/me'); return response({}, 401); });
   vi.stubGlobal('fetch', fetchMock); mount('/');
-  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Đọc giáo trình, hỏi trợ giảng, mở đúng trang để kiểm chứng');
+  expect(screen.getByRole('heading', { level: 1 })).toHaveTextContent('Học theo lớp, từ giáo trình đến bài tập');
   await waitFor(() => expect(fetchMock).toHaveBeenCalledTimes(1));
   await act(async () => {});
   expect(screen.getByLabelText('Đường dẫn')).toHaveTextContent(/^\/$/);
@@ -287,7 +287,7 @@ it('trang chủ không chờ auth/me và đổi liên kết khi có phiên', asy
   expect(screen.getByRole('heading', { level: 1 })).toBeInTheDocument();
   expect(screen.getAllByRole('link', { name: 'Đăng nhập' })).toHaveLength(2);
   await act(async () => { resolve(response(student)); });
-  const links = await screen.findAllByRole('link', { name: 'Vào trang học tập' });
+  const links = await screen.findAllByRole('link', { name: 'Vào lớp học' });
   links.forEach(link => expect(link).toHaveAttribute('href', '/hoc'));
   expect(screen.queryByRole('link', { name: 'Đăng nhập' })).not.toBeInTheDocument();
 });
@@ -296,11 +296,9 @@ it('trang đăng nhập có liên kết về trang chủ', () => {
   expect(screen.getByRole('link', { name: '← Trang chủ' })).toHaveAttribute('href', '/');
 });
 
-it('nút xem mẫu cuộn và đưa focus đến tiêu đề ví dụ', () => {
+it('nút phụ dẫn tới mục cách hoạt động', () => {
   vi.stubGlobal('fetch', vi.fn(() => new Promise<Response>(() => {}))); mount('/');
-  const heading = screen.getByRole('heading', { name: 'Thử kiểm chứng một câu trả lời' });
-  const scroll = vi.fn(); heading.scrollIntoView = scroll;
-  fireEvent.click(screen.getByRole('button', { name: 'Xem một câu trả lời mẫu' }));
-  expect(scroll).toHaveBeenCalledWith({ block: 'start' });
-  expect(heading).toHaveFocus();
+  expect(screen.getByRole('link', { name: 'Xem cách hoạt động' })).toHaveAttribute('href', '#cach-hoat-dong');
+  expect(document.getElementById('cach-hoat-dong')).toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Xem một câu trả lời mẫu' })).not.toBeInTheDocument();
 });
