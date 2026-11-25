@@ -13,6 +13,10 @@ from alembic import command
 from app.db import get_db
 from app.main import app
 
+# The app lifespan starts the ingest worker, which polls DUT_DATABASE_URL (the dev database
+# locally, a missing database in CI). Tests never need it; worker tests opt in explicitly.
+os.environ["DUT_INGEST_WORKER"] = "0"
+
 
 @pytest.fixture(scope="session")
 def test_engine() -> Iterator[Engine]:
