@@ -14,7 +14,7 @@ function mockApi(me = student, classes: ClassSummary[] = []) {
     if (path === '/api/classes') return response(classes);
     if (path === '/api/me/continue') return response(null);
     if (path === '/api/classes/c1') return response({ ...classSummary, lessons: [] });
-    if (path === '/api/classes/c1/materials') return response([]);
+    if (path === '/api/classes/c1/materials' || path === '/api/classes/c1/assignments') return response([]);
     if (path === '/api/admin/users') return response([]);
     if (path === '/api/auth/login') return response({});
     if (path === '/api/auth/logout') return new Response(null, { status: 204 });
@@ -33,6 +33,28 @@ function submit() {
   fireEvent.submit(screen.getByRole('button', { name: 'Đăng nhập' }).closest('form')!);
 }
 afterEach(() => { vi.unstubAllGlobals(); vi.unstubAllEnvs(); vi.useRealTimers(); });
+
+it('dashboard uses real assignment flags, hides null continuation and never fetches individual grades', async () => {
+  const base = mockApi(student, [classSummary]);
+  const assignment = { id: 'a1', title: 'Bài con trỏ', status: 'published', my_versions: 0, due_at: '2099-11-30T16:59:00Z', my_grade_published: false };
+  const mock = vi.fn(async (path: string) => path === '/api/classes/c1/assignments'
+    ? response([assignment, { ...assignment, id: 'a2', title: 'Bài đã chấm', my_versions: 1, my_grade_published: true }, { ...assignment, id: 'a3', title: 'Bài đã đóng', status: 'closed' }]) : base(path));
+  vi.stubGlobal('fetch', mock); mount();
+  const tasks = await screen.findByRole('region', { name: 'Việc cần làm' });
+  await screen.findByRole('link', { name: /Bài con trỏ/ });
+  expect(tasks).toHaveTextContent('Kỹ thuật lập trình · chưa nộp');
+  expect(tasks).not.toHaveTextContent('Bài đã đóng');
+  expect(tasks).not.toHaveTextContent('Bài đã chấm');
+  expect(screen.getByRole('link', { name: /Bài đã chấm — Đã có điểm/ })).toHaveAttribute('href', '/lop/c1/bai-tap/a2');
+  expect(screen.queryByRole('link', { name: /Tiếp tục đọc/ })).not.toBeInTheDocument();
+  expect(mock.mock.calls.some(([path]) => path.includes('/submissions/me'))).toBe(false);
+});
+
+it('dashboard shows the empty task message and hides results without published grades', async () => {
+  vi.stubGlobal('fetch', mockApi(student, [classSummary])); mount();
+  expect(await screen.findByText('Không có bài tập nào đang chờ nộp.')).toBeInTheDocument();
+  expect(screen.queryByRole('heading', { name: 'Vừa có kết quả' })).not.toBeInTheDocument();
+});
 it.each([
   [student, '/hoc', 'Chào An'],
   [lecturer, '/giang-day', 'Lớp phụ trách'],
@@ -124,6 +146,14 @@ it('menu thu gọn có thể bật tắt và đóng sau khi chọn điều hư�
   fireEvent.click(screen.getByRole('link', { name: 'Học tập' }));
   expect(toggle).toHaveAttribute('aria-expanded', 'false');
 });
+it('Escape closes the mobile menu and returns focus to its toggle', async () => {
+  vi.stubGlobal('fetch', mockApi()); mount();
+  const toggle = await screen.findByRole('button', { name: 'Menu' });
+  fireEvent.click(toggle);
+  fireEvent.keyDown(screen.getByRole('link', { name: 'Học tập' }), { key: 'Escape' });
+  expect(toggle).toHaveAttribute('aria-expanded', 'false');
+  expect(toggle).toHaveFocus();
+});
 it('người dùng thường không thấy nội dung quản trị', async () => {
   vi.stubGlobal('fetch', mockApi()); mount('/quan-tri');
   expect(await screen.findByRole('alert')).toHaveTextContent('Bạn không có quyền quản trị');
@@ -171,12 +201,12 @@ it('429 làm tròn phút, chặn gửi lại và mở nút sau đếm ngược',
   expect(row).toHaveAttribute('href', '/lop/c1');
   expect(screen.getByText('Học kỳ 1, 2026–2027')).toBeInTheDocument();
   expect(screen.queryByText(/Tiếp tục đọc/)).not.toBeInTheDocument();
-  expect(screen.queryByText('Việc cần làm')).not.toBeInTheDocument();
+  expect(screen.getByRole('heading', { name: 'Việc cần làm' })).toBeInTheDocument();
   expect(screen.queryByText('Phản hồi mới')).not.toBeInTheDocument();
   fireEvent.click(row);
   expect(await screen.findByRole('heading', { name: 'Kỹ thuật lập trình' })).toBeInTheDocument();
   expect(screen.getByRole('link', { name: 'Quay lại danh sách lớp' })).toHaveAttribute('href', '/hoc');
-  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/me/continue', '/api/classes/c1', '/api/classes/c1/materials'].includes(path))).toBe(true);
+  expect(fetchMock.mock.calls.every(([path]) => ['/api/auth/me', '/api/classes', '/api/me/continue', '/api/classes/c1/assignments', '/api/classes/c1', '/api/classes/c1/materials'].includes(path))).toBe(true);
 });
 it('nút tài khoản có đúng họ tên hiển thị trong tên trợ năng và mở menu', async () => {
   vi.stubGlobal('fetch', mockApi({ ...student, full_name: 'Nguyễn Văn Huy' })); mount('/hoc');

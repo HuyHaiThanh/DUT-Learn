@@ -5,6 +5,7 @@ import { ApiError, apiFetch } from '@/api/client';
 import type { Lesson, LessonCreate, LessonUpdate } from '@/api/types';
 import { isUnauthorized } from '@/features/auth';
 import { LoginRedirect } from '@/components/feedback';
+import { StatusPill } from '@/components/StatusPill';
 import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
@@ -79,7 +80,7 @@ export function ClassPage() {
       <MaterialError error={materials.error} />
       {materials.isError && <Button variant="outline" onClick={() => void materials.refetch()}>Thử tải lại học liệu</Button>}
       {lessons.length ? <ul className="list-panel lesson-list">{lessons.map((lesson, index) => <li className="lesson-row" key={lesson.id}>
-        <div className="class-copy"><h3 className="row-title">{lesson.title}</h3>{lecturer && <span className={`admin-badge${lesson.is_published ? ' success' : ''}`}>{lesson.is_published ? 'Đã công bố' : 'Nháp'}</span>}{materials.isPending ? <p role="status">Đang tải học liệu…</p> : materials.data && <MaterialLinks materials={materials.data.filter(m => m.lesson_id === lesson.id && m.active_version_id)} />}</div>
+        <div className="class-copy"><h3 className="row-title">{lesson.title}</h3>{lecturer && <StatusPill tone={lesson.is_published ? 'ok' : 'neutral'} icon={lesson.is_published ? 'check' : 'clipboard'}>{lesson.is_published ? 'Đã công bố' : 'Nháp'}</StatusPill>}{materials.isPending ? <p role="status" className="state-panel loading-state"><span className="spinner" aria-hidden="true" />Đang tải học liệu…</p> : materials.data && <MaterialLinks materials={materials.data.filter(m => m.lesson_id === lesson.id && m.active_version_id)} />}</div>
         {lecturer && <div className="lesson-actions">
           <TitleDialog classId={classId} lesson={lesson} disabled={move.isPending} /><PublishDialog classId={classId} lesson={lesson} disabled={move.isPending} />
           {([-1, 1] as const).map(step => <Button key={step} variant="outline" disabled={move.isPending || (step === -1 ? index === 0 : index === lessons.length - 1)} aria-label={`${step === -1 ? 'Đưa lên' : 'Đưa xuống'}: ${lesson.title}`} onClick={() => { if (!move.isPending) move.mutate({ lessons, index, step }); }}><svg aria-hidden="true" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d={step === -1 ? 'm6 14 6-6 6 6' : 'm6 10 6 6 6-6'} /></svg></Button>)}

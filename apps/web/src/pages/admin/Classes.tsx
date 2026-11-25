@@ -1,3 +1,4 @@
+import { StatusPill } from '@/components/StatusPill';
 import { formatTerm } from '@/pages/Classes';
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
@@ -37,7 +38,7 @@ export function AdminClasses() {
       <SelectField label="Lọc theo học phần" value={courseId} onChange={e => setCourseId(e.target.value)}><option value="">Tất cả học phần</option>{courses.data?.map(c => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</SelectField>
     </div>{rows.length ? <Table label="Danh sách lớp học phần" headers={['Mã lớp', 'Học phần', 'Học kỳ', 'Trạng thái', 'Thành viên']}>{rows.map(c => {
       const course = courses.data?.find(course => course.id === c.course_id);
-      return <tr key={c.id}><td className="admin-name">{c.code}</td><td>{course ? <>{course.name}<span className="metadata">{course.code}</span></> : c.course_id}</td><td>{formatTerm(c.term)}</td><td><span className={c.status === 'open' ? 'admin-badge success' : 'admin-badge'}>{c.status === 'open' ? 'Đang mở' : 'Đã đóng'}</span></td><td><Link to={`/quan-tri/lop-hoc-phan/${encodeURIComponent(c.id)}`}>Quản lý thành viên<span className="sr-only"> lớp {c.code}</span></Link></td></tr>;
+      return <tr key={c.id}><td className="admin-name">{c.code}</td><td>{course ? <>{course.name}<span className="metadata">{course.code}</span></> : c.course_id}</td><td>{formatTerm(c.term)}</td><td><StatusPill tone={c.status === 'open' ? 'ok' : 'neutral'} icon={c.status === 'open' ? 'check' : 'lock'}>{c.status === 'open' ? 'Đang mở' : 'Đã đóng'}</StatusPill></td><td><Link to={`/quan-tri/lop-hoc-phan/${encodeURIComponent(c.id)}`}>Quản lý thành viên<span className="sr-only"> lớp {c.code}</span></Link></td></tr>;
     })}</Table> : <Empty>{term || courseId ? 'Không có lớp khớp bộ lọc. Chọn tất cả học kỳ và học phần để xem lại.' : <>Chưa có lớp học phần. {courses.data?.length ? 'Chọn “Thêm lớp học phần” để bắt đầu.' : <Link to="/quan-tri/hoc-phan">Tạo học phần trước</Link>}</>}</Empty>}</QueryState>
   </section>;
 }

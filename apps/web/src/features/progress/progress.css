@@ -13,3 +13,12 @@
 .progress-filter { display: grid; gap: .5rem; max-width: 24rem; margin-block: 1rem; }
 .progress-note { margin-top: 1rem; }
 .progress-grades li { margin-block: .75rem; }
+
+.progress-block { background: var(--surface); border-radius: var(--r-lg); padding: 24px; }
+.progress-block h3 { font-size: 22px; font-weight: 800; }
+.progress-track { background: var(--sky); height: 8px; }
+.progress-table-frame { background: var(--surface); border-radius: var(--r-lg); }
+.progress-table thead { background: var(--sky-2); color: var(--ink-2); }
+.progress-table th, .progress-table td { padding: 16px 20px; }
+.progress-table thead th { font-weight: 700; }
+.progress-note { font-size: 14px; color: var(--ink-2); }

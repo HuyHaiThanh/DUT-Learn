@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Dialog } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Icon } from '@/components/icons';
 
 export type VersionStatus = 'uploaded' | 'processing' | 'ready' | 'failed' | 'published' | 'superseded' | 'revoked';
 export type Version = { id: string; version_no: number; status: VersionStatus; error: string | null };
@@ -31,7 +32,7 @@ export function MaterialError({ error }: { error: Error | null }) {
 export function MaterialLinks({ materials }: { materials: Material[] }) {
   if (!materials.length) return <p className="metadata">Chưa có học liệu</p>;
   return <ul className="material-links">{materials.map(material => <li key={material.id}>{material.active_version_id && <Link to={`/doc/${material.active_version_id}?page=1`}>
-    {material.title}<span className="metadata">{material.kind === 'pdf' ? 'PDF' : 'Văn bản'}{material.page_count != null ? ` · ${material.page_count} trang` : ''}</span>
+    <span className="feature-icon icon-sky"><Icon name="book" /></span><span className="material-link-copy">{material.title}<span className="metadata">{material.kind === 'pdf' ? 'PDF' : 'Văn bản'}{material.page_count != null ? ` · ${material.page_count} trang` : ''}</span></span><span className="material-read">Đọc</span>
   </Link>}</li>)}</ul>;
 }
 
@@ -88,7 +89,7 @@ function VersionAction({ classId, material, version, action }: { classId: string
   return <Dialog title={`${label} học liệu`} description={`${material.title} · phiên bản ${version.version_no}. ${action === 'revoke' ? 'Sau khi thu hồi, sinh viên sẽ không đọc/trích dẫn được nữa.' : action === 'publish' ? 'Sinh viên được cấp quyền sẽ đọc được phiên bản này; bản công bố cũ sẽ được thay thế.' : 'Thử xử lý lại tệp đã tải lên.'}`}
     open={open} pending={mutation.isPending} focusCancel onOpenChange={next => { setOpen(next); if (next) mutation.reset(); }}
     trigger={<Button variant="outline" aria-label={`${label}: ${material.title}, phiên bản ${version.version_no}`}>{label}</Button>}>
-    {action === 'publish' && <>{detail.isFetching && <p role="status">Đang tải báo cáo chất lượng…</p>}<MaterialError error={detail.error} /><QualityReport report={detail.data?.quality_report ? { ...detail.data.quality_report, empty_pages: detail.data.quality_report.empty_pages.length } : null} /></>}
+    {action === 'publish' && <>{detail.isFetching && <p role="status" className="state-panel loading-state"><span className="spinner" aria-hidden="true" />Đang tải báo cáo chất lượng…</p>}<MaterialError error={detail.error} /><QualityReport report={detail.data?.quality_report ? { ...detail.data.quality_report, empty_pages: detail.data.quality_report.empty_pages.length } : null} /></>}
     <div className="admin-form"><MaterialError error={mutation.error} /><Button disabled={mutation.isPending || (action === 'publish' && !detail.isSuccess)} onClick={() => { if (!mutation.isPending) mutation.mutate(); }}>{mutation.isPending ? 'Đang lưu…' : 'Xác nhận'}</Button></div>
   </Dialog>;
 }
@@ -97,7 +98,7 @@ export function LecturerMaterials({ classId, lessons }: { classId: string; lesso
   const query = useMaterials(classId);
   return <section aria-labelledby="materials-heading" className="materials-section" aria-busy={query.isFetching}>
     <div className="admin-heading"><h2 id="materials-heading" className="section-title">Học liệu</h2><MaterialEditor classId={classId} lessons={lessons} /></div>
-    {query.isPending && <p role="status">Đang tải học liệu…</p>}
+    {query.isPending && <p role="status" className="state-panel loading-state"><span className="spinner" aria-hidden="true" />Đang tải học liệu…</p>}
     <MaterialError error={query.error} />{query.isError && <Button variant="outline" onClick={() => void query.refetch()}>Thử tải lại học liệu</Button>}
     {query.data && (query.data.length ? <ul className="list-panel material-list">{query.data.map(material => {
       const versions = material.versions ?? [];
@@ -106,10 +107,10 @@ export function LecturerMaterials({ classId, lessons }: { classId: string; lesso
       return <li key={material.id} className="material-row">
         <h3 className="row-title">{material.title}</h3><p className="metadata">{lessons.find(l => l.id === material.lesson_id)?.title ?? 'Học liệu chung của lớp'} · {material.visibility === 'students' ? 'Sinh viên' : 'Chỉ giảng viên'}</p>
         <p className="metadata">Đang công bố: {active ? `phiên bản ${active.version_no}` : 'Chưa có'}</p>
-        {latest && <p>Bản mới nhất: {latest.version_no} · <span className={`material-status status-${latest.status}`}>{statusLabels[latest.status]}</span></p>}
+        {latest && <p>Bản mới nhất: {latest.version_no} · <span className={`material-status status-${latest.status}`}><Icon name={latest.status === 'revoked' ? 'lock' : latest.status === 'failed' ? 'alert' : ['ready', 'published'].includes(latest.status) ? 'check' : 'clock'} />{statusLabels[latest.status]}</span></p>}
         {latest?.status === 'ready' && <QualityReport report={material.quality_report} />}
         <div className="material-actions"><MaterialEditor classId={classId} lessons={lessons} material={material} /><MaterialEditor classId={classId} lessons={lessons} material={material} replace /></div>
-        <ul className="version-list">{versions.map(version => <li key={version.id}><span>Phiên bản {version.version_no} · <span className={`material-status status-${version.status}`}>{statusLabels[version.status]}</span></span>
+        <ul className="version-list">{versions.map(version => <li key={version.id}><span>Phiên bản {version.version_no} · <span className={`material-status status-${version.status}`}><Icon name={version.status === 'revoked' ? 'lock' : version.status === 'failed' ? 'alert' : ['ready', 'published'].includes(version.status) ? 'check' : 'clock'} />{statusLabels[version.status]}</span></span>
           <div className="material-actions"><Link to={`/doc/${version.id}?page=1`}>Đọc phiên bản {version.version_no}</Link>
             {version.status === 'ready' && <VersionAction classId={classId} material={material} version={version} action="publish" />}
             {version.status === 'failed' && <VersionAction classId={classId} material={material} version={version} action="reprocess" />}

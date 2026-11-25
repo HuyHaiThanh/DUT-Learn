@@ -3,3 +3,8 @@ export function formatDateTime(iso: string) {
   const part = (name: string) => parts.find(p => p.type === name)?.value;
   return `${part('hour')}:${part('minute')}, ${part('day')}/${part('month')}/${part('year')}`;
 }
+
+export function formatShortDateTime(iso: string) {
+  const [time, date] = formatDateTime(iso).split(', ');
+  return `${date.slice(0, 5)}, ${time}`;
+}

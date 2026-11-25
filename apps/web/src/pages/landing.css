@@ -1,4 +1,4 @@
-.landing-page { color: var(--ink); background: var(--ground); line-height: 1.55; }
+.landing-page { color: var(--ink); background: var(--ground); font-size: 15px; line-height: 1.55; }
 .landing-page h1, .landing-page h2, .landing-page h3, .landing-page h4, .landing-page p { margin: 0; }
 .landing-page h2 { font-size: 22px; font-weight: 800; margin-bottom: 16px; }
 .landing-page h3 { font-size: 17px; font-weight: 700; margin-bottom: 12px; }
