@@ -24,7 +24,7 @@ afterEach(() => vi.unstubAllGlobals());
 
 it('shows student counts, separate sections, grades and the exact note', async () => {
   const mock = setup(data);
-  expect(await screen.findByRole('heading', { name: 'Hoạt động học' })).toBeInTheDocument();
+  expect(await screen.findByRole('heading', { name: 'Hoạt động' })).toBeInTheDocument();
   expect(screen.getByRole('heading', { name: 'Kết quả' })).toBeInTheDocument();
   for (const [label, value] of [['Học liệu đã mở', '3 / 5'], ['Bài đã nộp', '1 / 2'], ['Luyện tập đã làm', '4 / 6'], ['Trắc nghiệm đúng (lần gần nhất)', '3 / 3']]) {
     expect(screen.getByText(label).parentElement).toHaveTextContent(value);
@@ -38,12 +38,12 @@ it('shows student counts, separate sections, grades and the exact note', async (
 it('shows students alphabetically and filters names without ranks', async () => {
   setup(['Trần Bình', 'Nguyễn An'].map((full_name, index) => ({ ...data, full_name, user_id: String(index), last_activity_at: null })), true);
   const table = await screen.findByRole('table');
-  const rows = within(table).getAllByRole('row');
-  expect(rows[1]).toHaveTextContent('Nguyễn An');
-  expect(rows[2]).toHaveTextContent('Trần Bình');
+  const rows = within(table).getAllByRole('row').slice(2);
+  expect(rows[0]).toHaveTextContent('Nguyễn An');
+  expect(rows[1]).toHaveTextContent('Trần Bình');
   expect(rows[1]).toHaveTextContent('Chưa có');
   fireEvent.change(screen.getByLabelText('Lọc tên'), { target: { value: 'bình' } });
-  expect(within(table).getAllByRole('row')).toHaveLength(2);
+  expect(within(table).getAllByRole('row')).toHaveLength(3);
   expect(screen.queryByText('Nguyễn An')).not.toBeInTheDocument();
 });
 
@@ -104,7 +104,7 @@ it.each([200, 410])('records a citation only after a successful open (%s)', asyn
   });
   vi.stubGlobal('fetch', mock);
   render(<MemoryRouter><TutorPanel context={{ class_id: 'c1', material_id: 'm1' }} pageIndex={0} /></MemoryRouter>);
-  fireEvent.click((await screen.findAllByRole('button', { name: 'Mở nguồn 1: Synthetic, trang 1' }))[0]);
+  fireEvent.click((await screen.findAllByRole('button', { name: 'Nguồn 1, trang 1' }))[0]);
   if (status === 200) await waitFor(() => expect(mock.mock.calls.filter(([path]) => path === '/api/events')).toHaveLength(1));
   else {
     await screen.findByText('Nguồn này đã bị thu hồi hoặc thay thế.');

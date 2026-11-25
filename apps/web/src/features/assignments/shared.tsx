@@ -9,12 +9,20 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { isUnauthorized } from '@/features/auth';
 import { formatDateTime } from '@/lib/datetime';
+import { StatusPill } from '@/components/StatusPill';
 
 export type Assignment = { id: string; title: string; instructions: string; criteria: string; due_at: string | null; lesson_id: string | null; status: 'draft' | 'published' | 'closed'; submission_count: number; my_versions: number; my_grade_published: boolean };
 export type Grade = { revision_id: string; revision_no: number; status: 'draft' | 'published'; grade: number | null; comment: string; criteria_snapshot: string; published_at: string | null };
 export type Version = { id: string; version_id: string; version_no: number; content: string; submitted_at: string; is_late: boolean; grade: Pick<Grade, 'revision_id' | 'grade' | 'comment' | 'published_at'> | null };
 export type Student = { student: { id: string; full_name: string; email: string }; versions: Pick<Version, 'id' | 'version_no' | 'submitted_at' | 'is_late'>[]; latest_grade: Grade | null };
 export const labels = { draft: 'Nháp', published: 'Đang mở nộp', closed: 'Đã đóng' };
+export function deadlineLabel(due: string): string {
+  const remaining = new Date(due).getTime() - Date.now();
+  return remaining < 0 ? 'Đã quá hạn' : `Còn ${Math.ceil(remaining / 86400000)} ngày`;
+}
+export function AssignmentStatus({ item }: { item: Assignment }) {
+  return <StatusPill tone={item.status === 'published' ? 'ok' : 'neutral'} icon={item.status === 'closed' ? 'lock' : item.status === 'published' ? 'check' : 'clipboard'}>{labels[item.status]}</StatusPill>;
+}
 export const request = <T,>(path: string, body?: unknown, method = 'POST') => apiFetch<T>(path, { method, body: body === undefined ? undefined : JSON.stringify(body) });
 export function date(value: string | null) {
   if (!value) return 'Không có hạn nộp';
@@ -32,11 +40,11 @@ export function useRefresh() {
   const client = useQueryClient();
   return () => client.invalidateQueries({ queryKey: ['assignments'] });
 }
-export function Confirm({ label, description, action, disabled = false }: { label: string; description: string; action: () => Promise<unknown>; disabled?: boolean }) {
+export function Confirm({ label, description, action, disabled = false, primary = false }: { label: string; description: string; action: () => Promise<unknown>; disabled?: boolean; primary?: boolean }) {
   const [open, setOpen] = useState(false);
   const refresh = useRefresh();
   const mutation = useMutation({ mutationFn: action, onSuccess: async () => { await refresh(); setOpen(false); } });
-  return <><Dialog title={label} description={description} trigger={<Button variant="outline" disabled={disabled}>{label}</Button>} open={open} onOpenChange={next => { setOpen(next); mutation.reset(); }} pending={mutation.isPending} focusCancel>
+  return <><Dialog title={label} description={description} trigger={<Button variant={primary ? 'default' : 'outline'} disabled={disabled}>{label}</Button>} open={open} onOpenChange={next => { setOpen(next); mutation.reset(); }} pending={mutation.isPending} focusCancel>
     <ErrorMessage error={mutation.error} /><Button disabled={mutation.isPending} onClick={() => mutation.mutate()}>{mutation.isPending ? 'Đang gửi…' : 'Xác nhận'}</Button>
   </Dialog>{mutation.isSuccess && <p role="status">Đã lưu thay đổi.</p>}</>;
 }

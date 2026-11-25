@@ -30,6 +30,19 @@ function setup({ role = 'student', detail = true, assignment = item, versions = 
 }
 afterEach(() => vi.unstubAllGlobals());
 
+it('shows one criteria heading and puts draft/publish actions together without nesting the confirmation form', async () => {
+  setup({ role: 'lecturer' });
+  fireEvent.click(await screen.findByRole('button', { name: 'Nguyễn An' }));
+  await screen.findByLabelText('Điểm');
+  expect(screen.getAllByRole('heading', { name: 'Tiêu chí chấm' })).toHaveLength(1);
+  const save = screen.getByRole<HTMLButtonElement>('button', { name: 'Lưu nháp' });
+  const publish = screen.getByRole('button', { name: 'Công bố điểm' });
+  expect(save.parentElement).toBe(publish.parentElement);
+  expect(save.form).toBe(screen.getByLabelText('Điểm').closest('form'));
+  expect(publish.closest('form')).toBeNull();
+  expect(screen.getByLabelText('Phiên bản bài nộp')).toBeInTheDocument();
+});
+
 it('enables publishing after saving 8.50 as numeric 8.5', async () => {
   let saved = grade;
   setup({ role: 'lecturer', revisions: () => [saved], write: async () => {
@@ -118,5 +131,43 @@ it('hides submission controls when closed', async () => {
 it('formats date and editor values in Asia/Ho_Chi_Minh', () => {
   expect(date('2026-11-12T16:59:00Z')).toBe('23:59, 12/11/2026');
   expect(localDate('2026-11-12T16:59:00Z')).toBe('2026-11-12T23:59');
+});
+
+it.each(['8,5', '8.5'])('sends decimal input %s as a number and displays Vietnamese scores', async input => {
+  const mock = setup({ role: 'lecturer' });
+  expect(await screen.findByText('Nháp: 8,25')).toBeInTheDocument();
+  fireEvent.click(screen.getByRole('button', { name: 'Nguyễn An' }));
+  fireEvent.change(await screen.findByLabelText('Điểm'), { target: { value: input } });
+  fireEvent.click(screen.getByRole('button', { name: 'Lưu nháp' }));
+  await waitFor(() => expect(mock).toHaveBeenCalledWith('/api/submission-versions/v1/grades', expect.objectContaining({ body: JSON.stringify({ grade: 8.5, comment: grade.comment }) })));
+});
+
+it('renders fenced student submission code without fence markers', async () => {
+  setup({ versions: [{ ...version, content: 'Lời giải\n```c\nint *p = &a;\n```\nKết thúc' }] });
+  await screen.findByText('Lời giải');
+  expect(document.querySelector('.submission-content pre code')).toHaveTextContent('int *p = &a;');
+  expect(document.querySelector('.submission-content')).not.toHaveTextContent('```');
+  expect(screen.getByText('Kết thúc')).toBeInTheDocument();
+});
+
+it('renders fenced submission code in lecturer grading', async () => {
+  setup({ role: 'lecturer', write: async () => response({}) });
+  // The test API returns the selected submission through the same authorized endpoint.
+  const original = globalThis.fetch;
+  vi.stubGlobal('fetch', vi.fn(async (path: RequestInfo | URL, init?: RequestInit) => String(path) === '/api/submission-versions/v1'
+    ? response({ ...version, content: '```c\nreturn 0;\n```', revisions: [grade] }) : original(path, init)));
+  fireEvent.click(await screen.findByRole('button', { name: 'Nguyễn An' }));
+  await screen.findByLabelText('Điểm');
+  expect(document.querySelector('.assignment-grading pre code')).toHaveTextContent('return 0;');
+  expect(document.querySelector('.assignment-grading pre')).not.toHaveTextContent('```');
+});
+
+it('assignment status pills include an icon and visible words', async () => {
+  setup({ detail: false, assignment: { ...item, due_at: '2099-11-30T16:59:00Z', my_grade_published: true } });
+  const open = await screen.findByText('Đang mở nộp');
+  expect(open.closest('.status-pill')?.querySelector('svg')).not.toBeNull();
+  expect(screen.getByText('Chưa nộp').closest('.status-pill')).toBeInTheDocument();
+  expect(screen.getByText('Đã công bố điểm').closest('.status-pill')).toBeInTheDocument();
+  expect(screen.getByText('Hạn nộp: 23:59, 30/11/2099')).toBeInTheDocument();
 });
 

@@ -5,14 +5,14 @@ import { afterEach, expect, it, vi } from 'vitest';
 import { HighlightedText, Reader } from './Reader';
 
 function Location() { return <output data-testid="location">{useLocation().search}</output>; }
-function setup(entry = '/doc/v1?page=1', fail?: number, withContext = false) {
+function setup(entry = '/doc/v1?page=1', fail?: number, withContext = false, text = 'A😀 Nội dung trang') {
   const mock = vi.fn(async (path: string) => {
     if (path === '/api/auth/me') return new Response(JSON.stringify({ id: 'u1', system_role: 'user', classes: [] }));
     if (path === '/api/classes') return new Response(JSON.stringify(withContext ? [{ id: 'c1' }] : []));
     if (path === '/api/classes/c1/materials') return new Response(JSON.stringify([{ id: 'm1', title: 'Giáo trình C', active_version_id: 'v1' }]));
     if (path.includes('/tutor/sessions')) return new Response('[]');
     if (path === '/api/events' || path === '/api/reading-position') return new Response('{}');
-    return new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text: 'A😀 Nội dung trang', chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } });
+    return new Response(JSON.stringify(fail ? {} : { page_index: 0, page_label: 'i', text, chunks: [] }), { status: fail ?? 200, headers: { 'X-Page-Count': '3', 'X-Material-Kind': 'text' } });
   });
   vi.stubGlobal('fetch', mock);
   const client = new QueryClient({ defaultOptions: { queries: { retry: false } } });
@@ -20,6 +20,13 @@ function setup(entry = '/doc/v1?page=1', fail?: number, withContext = false) {
   return { mock, client };
 }
 afterEach(() => vi.unstubAllGlobals());
+
+it('reflows the display while keeping source highlight offsets from the raw page', async () => {
+  setup('/doc/v1?page=1&hl=12-15', undefined, false, '😀 Trong câu\nvăn này.\n\nĐoạn mới');
+  await screen.findByRole('region', { name: 'Văn bản trang' });
+  expect(document.querySelector('.reader-text')).toHaveTextContent('😀 Trong câu văn này.');
+  expect(document.querySelector('mark')).toHaveTextContent('văn');
+});
 
 it('links to the class and shows the material title from existing lists', async () => {
   const { mock } = setup('/doc/v1?page=1', undefined, true);
@@ -60,15 +67,13 @@ it('nút, ô trang, phím mũi tên và lịch sử thay đổi URL, bỏ highli
   await waitFor(() => expect(screen.getByTestId('location')).toHaveTextContent('?page=1'));
 });
 
-it('phím trong ô trang không điều hướng; phóng to có giới hạn', async () => {
+it('phím trong ô trang không điều hướng; văn bản không có điều khiển PDF', async () => {
   setup();
   const input = await screen.findByLabelText('Trang');
   fireEvent.keyDown(input, { key: 'ArrowRight' });
   expect(screen.getByTestId('location')).toHaveTextContent('?page=1');
-  fireEvent.click(screen.getByRole('button', { name: 'Phóng to' }));
-  expect(screen.getByLabelText('Mức phóng to')).toHaveTextContent('125%');
-  for (let i = 0; i < 8; i++) fireEvent.click(screen.getByRole('button', { name: 'Thu nhỏ' }));
-  expect(screen.getByRole('button', { name: 'Thu nhỏ' })).toBeDisabled();
+  expect(screen.queryByRole('button', { name: 'Phóng to' })).not.toBeInTheDocument();
+  expect(screen.queryByRole('button', { name: 'Thu nhỏ' })).not.toBeInTheDocument();
 });
 
 it.each([403, 404, 410])('không còn quyền %s có thông báo rõ và không lộ văn bản', async status => {

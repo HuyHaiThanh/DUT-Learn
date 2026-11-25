@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import type { Citation } from './api';
 
 export function CitationButton({ citation, open }: { citation: Citation; open: (citation: Citation) => void }) {
-  return <button type="button" className="tutor-citation" aria-label={`Mở nguồn ${citation.ordinal}: ${citation.material_title}, trang ${citation.page_label ?? citation.page_index + 1}`} onClick={() => open(citation)}>[{citation.ordinal}]</button>;
+  return <button type="button" className="tutor-citation" aria-label={`Nguồn ${citation.ordinal}, trang ${citation.page_label ?? citation.page_index + 1}`} onClick={() => open(citation)}>{citation.ordinal} · tr.{citation.page_label ?? citation.page_index + 1}</button>;
 }
 
 /** Only parse citation markers outside fenced and inline code; React escapes all text. */

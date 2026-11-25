@@ -23,7 +23,8 @@ it.each([null, { material_id: 'm1', version_id: 'v1', page_index: 2, page_label:
   if (position) {
     const link = await screen.findByRole('link', { name: /Tiếp tục đọc/ });
     expect(link).toHaveAttribute('href', '/doc/v1?page=3');
-    expect(link).toHaveTextContent('Giáo trình C · tr. iii');
+    expect(link).toHaveTextContent('Giáo trình C');
+    expect(link).toHaveTextContent('Bạn dừng ở trang iii');
     expect(link).not.toHaveTextContent('câu hỏi với trợ giảng');
   } else expect(screen.queryByRole('link')).not.toBeInTheDocument();
 });
@@ -79,7 +80,7 @@ it('tab di động đổi chế độ và trích dẫn cùng tài liệu giữ l
   expect(document.querySelector('.reader-document')).toHaveAttribute('data-mobile-hidden', 'true');
   fireEvent.change(screen.getByLabelText('Câu hỏi cho trợ giảng'), { target: { value: 'Một câu hỏi?' } });
   fireEvent.click(screen.getByRole('button', { name: 'Hỏi' }));
-  const source = await screen.findAllByRole('button', { name: /Mở nguồn 1:/ });
+  const source = await screen.findAllByRole('button', { name: /Nguồn 1, trang/ });
   fireEvent.click(source[0]);
   await waitFor(() => expect(screen.getByTestId('path')).toHaveTextContent('/doc/v1?page=2&hl=0-3'));
   await waitFor(() => expect(document.querySelector('mark')).toHaveTextContent('Nội'));
@@ -88,7 +89,7 @@ it('tab di động đổi chế độ và trích dẫn cùng tài liệu giữ l
   expect(screen.queryByText('Trợ giảng đã trả lời.')).not.toBeInTheDocument(); // Opening clears only the status.
   fireEvent.click(screen.getByRole('tab', { name: 'Trợ giảng' }));
   expect(document.querySelector('.reader-assistant')).toHaveAttribute('data-mobile-hidden', 'false');
-  expect(screen.getByLabelText('Luồng hỏi đáp')).toHaveTextContent('Đây là câu trả lời [1]');
+  expect(screen.getByLabelText('Luồng hỏi đáp')).toHaveTextContent('Đây là câu trả lời 1 · tr.ii');
   fireEvent.click(screen.getByRole('tab', { name: 'Tài liệu' }));
   expect(document.querySelector('.reader-assistant')).toHaveAttribute('data-mobile-hidden', 'true');
   expect(document.querySelector('.reader-document')).toHaveAttribute('data-mobile-hidden', 'false');
